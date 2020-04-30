@@ -1,0 +1,26 @@
+{
+	"name": "jweiland/sync-crop-areas",
+	"type": "typo3-cms-extension",
+	"description": "Sync first found crop area to all other CropVariants",
+	"license": "GPL-2.0-or-later",
+	"keywords": ["typo3", "TYPO3 CMS", "jweiland.net", "sync", "synchronize", "crop", "area", "variants"],
+	"homepage": "http://www.jweiland.net",
+	"authors": [
+		{
+			"name": "Stefan Froemken",
+			"email": "sfroemken@jweiland.net",
+			"role": "Lead Developer"
+		}
+	],
+	"support": {
+		"email": "projects@jweiland.net"
+	},
+	"require": {
+		"typo3/cms-core": "^9.5 || ^10.3"
+	},
+	"autoload": {
+		"psr-4": {
+			"JWeiland\\SyncCropAreas\\": "Classes"
+		}
+	}
+}
