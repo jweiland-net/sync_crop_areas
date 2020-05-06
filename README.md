@@ -14,7 +14,7 @@ for your editors. Further it is hard to match the exact position (cropArea) in a
 Run the following command within your Composer based TYPO3 project:
 
 ```
-composer require georgringer/news
+composer require jweiland/sync-crop-areas
 ```
 
 ### Installation using Extension Manager
