@@ -6,9 +6,9 @@
 
 .. _start:
 
-=============================================================
-Extension Name
-=============================================================
+===============
+sync_crop_areas
+===============
 
 .. only:: html
 
@@ -54,6 +54,7 @@ Extension Name
 
    Introduction/Index
    Installation/Index
+   Configuration/Index
    KnownProblems/Index
    Contribute/Index
    ChangeLog/Index
