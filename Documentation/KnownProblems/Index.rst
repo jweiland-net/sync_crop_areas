@@ -8,7 +8,7 @@ Known Problems
 ==============
 
 I can't copy 2nd or 3rd cropVariant to all other cropVariants
--------------------------------------------------------------
+=============================================================
 
 Currently we only support copying the cropArea of the first cropVariant. So, you can't decide to copy
 the cropArea of the second or fourth cropVariant back to all other cropVariants
@@ -18,26 +18,28 @@ cropVariants. So please try to keep the ratios for all cropVariants the same! In
 cropVariant has to be configured in all other cropVariants. It is no problem, if you have configured
 further ratios for all other cropVariants.
 
-sync_crop_areas does not work for columns of extension XY
----------------------------------------------------------
+.. _known-problems_not-working:
 
-If you have a look  into the TCA of `tt_content` column `image` you will see
-that TYPO3 will change the visible columns based on the file type. For image
-file types the core loads the TCA palette `imageoverlayPalette` which contains
-the columns `alternative`, `description`, `link`, `title` and `crop`.
+sync_crop_areas does not work for column of extension XY
+========================================================
 
-EXT:sync_crop_areas adds the cropping feature (column: sync_crop_area)
-before the `crop` column of palette: `imageoverlayPalette`
+First of all it's not the TYPO3 core itself which adds cropping feature to `sys_file_reference`, it's TYPO3 sysext
+`frontend`. The `core` initializes `sys_file_reference` with just `title` and `description` for all kind of files in
+TCA palette `basicoverlayPalette`. For each table in TYPO3 universe which contains a relation to `sys_file_reference`
+it is possible to overwrite the displayed columns or palettes. Sysext `frontend` contains the TCA for
+table `tt_content` which of cause has a relation to `sys_file_reference`. In its TCA it overwrite palette
+`basicoverlayPalette` to `imageoverlayPalette` which also contains the column `crop` for all image filetypes.
 
-Some extension authors like `bootstrap_package` do not make use of this TYPO3
-palette. That's why column `sync_crop_area` is not visible. So it's up to you
-to add this missing column to these foreign extensions.
+EXT:sync_crop_areas simply searches for `crop` in palette `imageoverlayPalette` and adds our own column
+`sync_crop_area` before `crop`.
 
-You need the table name of the foreign extension and the column name where
-the sync_crop_areas feature is missing.
+Some extension authors like `bootstrap_package` do not make use of TYPO3 palette `imageoverlayPalette`. That's why
+column `sync_crop_area` is not visible. So it's up to you to add this missing column to such extensions.
 
-As we want to modify the TCA of one or more foreign extensions we should be sure
-to load the foreign extensions BEFORE your site_package. Go into
+You need the table name of the foreign extension and the column name where the `sync_crop_areas` feature is missing.
+
+As we want to modify the TCA of one or more foreign extensions we should be sure to load the foreign
+extensions BEFORE your site_package. Go into
 
 `typo3conf/ext/[my_site_package]/ext_emconf.php`
 
@@ -60,7 +62,7 @@ in section `depends`. Here an example for `bootstrap_package`:
    ...
 
 
-Go into your site_package extension and create a new file:
+Go into your SitePackage extension and create a new file:
 
 `typo3conf/ext/[my_site_package]/Configuration/TCA/Overrides/[tableName].php`
 

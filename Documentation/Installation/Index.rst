@@ -3,13 +3,14 @@
 
 .. _installation:
 
+============
 Installation
 ============
 
 Target group: **Administrators**
 
 Installation via Composer
--------------------------
+=========================
 
 Run the following command within your Composer based TYPO3 project:
 
@@ -18,7 +19,7 @@ composer require jweiland/sync-crop-areas
 ```
 
 Installation via ExtensionManager
----------------------------------
+=================================
 
 The extension needs to be installed like any other extension of TYPO3 CMS:
 
