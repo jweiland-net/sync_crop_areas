@@ -6,6 +6,11 @@
 ChangeLog
 =========
 
+**Version 2.0.0**
+
+- Remove TYPO3 9 compatibility
+- Add TYPO3 11 compatibility
+
 **Version 1.0.4**
 
 - Add documentation how to extend foreign extensions with sync_crop_areas
