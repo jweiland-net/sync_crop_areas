@@ -14,7 +14,7 @@ namespace JWeiland\SyncCropAreas\Hook;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 
 /**
- * Copy first found CropArea to all other CropVariants
+ * Copy first found CropArea to all other CropVariants as long as selectedRatio matches
  */
 class DataHandlerHook
 {
@@ -35,21 +35,38 @@ class DataHandlerHook
             && !empty($incomingFieldArray['crop'])
             && !empty($incomingFieldArray['sync_crop_area'])
         ) {
-            $firstCropVariant = [];
+            // We need at least 2 CropVariants. With just 1 there is no target to copy something over ;-)
             $cropVariants = json_decode($incomingFieldArray['crop'], true) ?? [];
-            foreach ($cropVariants as $cropVariantName => &$cropVariant) {
-                if (empty($firstCropVariant)) {
-                    $firstCropVariant = $cropVariant;
-                    continue;
+            if (is_array($cropVariants) && count($cropVariants) > 1) {
+                $firstCropVariant = current($cropVariants);
+                if ($this->isValidCropVariant($firstCropVariant)) {
+                    foreach ($cropVariants as &$cropVariant) {
+                        // Don't modify first CropVariant
+                        if ($cropVariant === $firstCropVariant) {
+                            continue;
+                        }
+
+                        if (
+                            $this->isValidCropVariant($cropVariant)
+                            && $cropVariant['selectedRatio'] === $firstCropVariant['selectedRatio']
+                        ) {
+                            $cropVariant['cropArea'] = $firstCropVariant['cropArea'];
+                        }
+                    }
+                    unset($cropVariant);
+                    $incomingFieldArray['crop'] = json_encode($cropVariants);
                 }
-                if (!is_array($cropVariant['cropArea'])) {
-                    continue;
-                }
-                $cropVariant['selectedRatio'] = $firstCropVariant['selectedRatio'];
-                $cropVariant['cropArea'] = $firstCropVariant['cropArea'];
             }
-            unset($cropVariant);
-            $incomingFieldArray['crop'] = json_encode($cropVariants);
         }
+    }
+
+    protected function isValidCropVariant(array $cropVariant): bool
+    {
+        return
+            array_key_exists('cropArea', $cropVariant)
+            && array_key_exists('selectedRatio', $cropVariant)
+            && is_array($cropVariant['cropArea'])
+            && !empty($cropVariant['cropArea'])
+            && !empty($cropVariant['selectedRatio']);
     }
 }
