@@ -10,8 +10,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        typo3: [^9.5, ^10.4]
-        php: ['7.2', '7.3', '7.4']
+        typo3: [^10.4, ~11.3.0]
+        php: ['7.4']
+        include:
+          - typo3: ^10.4
+            php: '7.2'
+          - typo3: ^10.4
+            php: '7.3'
+          # nimut/testing-framework is not ready for PHP 8.0
+          #- typo3: ~11.4.0
+          #  php: '8.0'
 
     steps:
       - name: Checkout
@@ -40,10 +48,6 @@ jobs:
       - name: Install dependencies with typo3/cms-core:${{ matrix.typo3 }}
         run: |
           composer require typo3/cms-core:${{ matrix.typo3 }} --no-progress
-          composer require typo3/cms-extensionmanager:${{ matrix.typo3 }} --no-progress
-          # SF: Remove next line, if version 2.13.2 was released
-          # Issue: https://github.com/Nimut/testing-framework/issues/136
-          composer require doctrine/dbal:2.10.4 doctrine/cache:^1.0 --no-progress
           git checkout composer.json
 
       - name: php-cs-fixer
@@ -51,3 +55,6 @@ jobs:
 
       - name: Lint PHP
         run: composer ci:php:lint
+
+      - name: Unit Tests
+        run: composer ci:tests:unit
