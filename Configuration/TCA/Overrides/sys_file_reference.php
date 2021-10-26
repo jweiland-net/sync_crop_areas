@@ -3,7 +3,7 @@ if (!defined('TYPO3_MODE')) {
     die('Access denied.');
 }
 
-call_user_func(static function() {
+call_user_func(static function(): void {
     $ll = 'LLL:EXT:sync_crop_areas/Resources/Private/Language/locallang_db.xlf:';
 
     $newSysFileReferenceColumns = [

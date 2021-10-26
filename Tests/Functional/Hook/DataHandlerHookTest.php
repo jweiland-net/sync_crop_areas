@@ -35,22 +35,14 @@ class DataHandlerHookTest extends FunctionalTestCase
         'typo3conf/ext/sync_crop_areas'
     ];
 
-    /**
-     * @var DataHandlerHook
-     */
-    protected $subject;
+    protected DataHandlerHook $subject;
 
-    /**
-     * @var DataHandler
-     */
-    protected $dataHandler;
+    protected DataHandler $dataHandler;
 
     /**
      * Cropping example with equal selectedRatio but different cropArea
-     *
-     * @var array
      */
-    protected $crop = [
+    protected array $crop = [
         'desktop' => [
             'cropArea' => [
                 'x' => 0,
@@ -71,14 +63,15 @@ class DataHandlerHookTest extends FunctionalTestCase
         ],
     ];
 
-    public function setUp(): void
+    protected function setUp(): void
     {
         parent::setUp();
 
         $this->activateTcaCropVariants();
 
-        $this->dataHandler = $this->prophesize(DataHandler::class)->reveal();
-        $this->dataHandler->checkValue_currentRecord = [
+        /** @var DataHandler $dataHandler */
+        $dataHandler = $this->prophesize(DataHandler::class)->reveal();
+        $dataHandler->checkValue_currentRecord = [
             'uid' => 123,
             'pid' => 53,
             'tstamp' => time(),
@@ -93,11 +86,12 @@ class DataHandlerHookTest extends FunctionalTestCase
             'fieldname' => 'media',
             'table_local' => 'sys_file'
         ];
+        $this->dataHandler = $dataHandler;
 
         $this->subject = new DataHandlerHook();
     }
 
-    public function tearDown(): void
+    protected function tearDown(): void
     {
         unset(
             $this->subject,
@@ -234,8 +228,12 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function processDatamapWithDeactivatedFeatureWillNotChangeFieldArray(): void
     {
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($this->crop),
+        $fieldArray = [
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 0
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 0
         ];
 
@@ -255,8 +253,12 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function processDatamapWithWrongTableWillNotChangeFieldArray(): void
     {
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($this->crop),
+        $fieldArray = [
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -276,7 +278,11 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function processDatamapWithEmptyCropWillNotChangeFieldArray(): void
     {
-        $fieldArray = $expectedFieldArray = [
+        $fieldArray = [
+            'crop' => [],
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
             'crop' => [],
             'sync_crop_area' => 1
         ];
@@ -300,8 +306,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         unset($crop['desktop']['selectedRatio']);
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -324,8 +334,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         $crop['desktop']['selectedRatio'] = '';
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -348,8 +362,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         unset($crop['desktop']['cropArea']);
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -372,8 +390,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         $crop['desktop']['cropArea'] = [];
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -396,8 +418,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         unset($crop['mobile']);
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -420,8 +446,12 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop = $this->crop;
         $crop['mobile']['selectedRatio'] = '16:9';
 
-        $fieldArray = $expectedFieldArray = [
-            'crop' => json_encode($crop),
+        $fieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'sync_crop_area' => 1
+        ];
+        $expectedFieldArray = [
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -445,14 +475,14 @@ class DataHandlerHookTest extends FunctionalTestCase
         $crop['desktop']['selectedRatio'] = 'NaN';
 
         $fieldArray = [
-            'crop' => json_encode($crop),
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
         $crop['mobile']['selectedRatio'] = 'NaN';
         $crop['mobile']['cropArea'] = $this->crop['desktop']['cropArea'];
         $expectedFieldArray = [
-            'crop' => json_encode($crop),
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
@@ -482,14 +512,14 @@ class DataHandlerHookTest extends FunctionalTestCase
         unset($crop['mobile']);
 
         $fieldArray = [
-            'crop' => json_encode($crop),
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
         $crop['tablet'] = $crop['desktop'];
         $crop['smartphone'] = $crop['desktop'];
         $expectedFieldArray = [
-            'crop' => json_encode($crop),
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 1
         ];
 
