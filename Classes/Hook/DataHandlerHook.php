@@ -21,20 +21,13 @@ use TYPO3\CMS\Core\Utility\ArrayUtility;
  */
 class DataHandlerHook
 {
-    /**
-     * @param string $status
-     * @param string $table
-     * @param int|string $id
-     * @param array $fieldArray
-     * @param DataHandler $dataHandler
-     */
     public function processDatamap_postProcessFieldArray(
         string $status,
         string $table,
         $id,
         array &$fieldArray,
         DataHandler $dataHandler
-    ) {
+    ): void {
         if (
             $table === 'sys_file_reference'
             && ($sysFileReferenceRecord = $this->getSysFileReferenceRecord($dataHandler, $fieldArray))
@@ -43,7 +36,7 @@ class DataHandlerHook
         ) {
             [$pageUid] = BackendUtility::getTSCpid($table, $id, $sysFileReferenceRecord['pid'] ?? 0);
             // We need at least 2 CropVariants. With just 1 there is no target to copy something over ;-)
-            $cropVariants = json_decode($sysFileReferenceRecord['crop'], true) ?? [];
+            $cropVariants = json_decode($sysFileReferenceRecord['crop'], true, 512, JSON_THROW_ON_ERROR) ?? [];
             if (is_array($cropVariants) && count($cropVariants) > 1) {
                 $firstCropVariant = current($cropVariants);
                 if ($this->isValidCropVariant($firstCropVariant)) {
@@ -65,8 +58,9 @@ class DataHandlerHook
                             $cropVariant['cropArea'] = $firstCropVariant['cropArea'];
                         }
                     }
+
                     unset($cropVariant);
-                    $fieldArray['crop'] = json_encode($cropVariants);
+                    $fieldArray['crop'] = json_encode($cropVariants, JSON_THROW_ON_ERROR);
                 }
             }
         }
@@ -81,7 +75,7 @@ class DataHandlerHook
      *
      * @param DataHandler $dataHandler Needed to get the full "old" DB record
      * @param array $fieldArray Needed to overwrite values in old DB record with the updated properties
-     * @return array Returns full DB record with updated values
+     * @return array[] Returns full DB record with updated values
      */
     protected function getSysFileReferenceRecord(DataHandler $dataHandler, array $fieldArray): array
     {
@@ -93,36 +87,36 @@ class DataHandlerHook
 
     /**
      * Test, if $selectedRatio is available in CropVariant named $cropVariantName
-     *
-     * @param string $cropVariantName
-     * @param string $selectedRatio
-     * @param int $pageUid
-     * @return bool
      */
     protected function isSelectedRatioAvailableInForeignCropVariant(string $cropVariantName, string $selectedRatio, int $pageUid): bool
     {
         return in_array($selectedRatio, $this->getAllowedAspectRatiosForCropVariant($cropVariantName, $pageUid), true);
     }
 
+    /**
+     * Return allowed aspect ratios from merged (TCA and TCEFORM) config of cropVariants by name
+     *
+     * @return array[]
+     */
     protected function getAllowedAspectRatiosForCropVariant(string $cropVariantName, int $pageUid): array
     {
         $cropVariants = $this->getMergedCropVariants($pageUid);
-        if (
-            array_key_exists($cropVariantName, $cropVariants)
-            && array_key_exists('allowedAspectRatios', $cropVariants[$cropVariantName])
-            && is_array($cropVariants[$cropVariantName]['allowedAspectRatios'])
-        ) {
-            return array_keys($cropVariants[$cropVariantName]['allowedAspectRatios']);
+        if (!array_key_exists($cropVariantName, $cropVariants)) {
+            return [];
         }
-
-        return [];
+        if (!array_key_exists('allowedAspectRatios', $cropVariants[$cropVariantName])) {
+            return [];
+        }
+        if (!is_array($cropVariants[$cropVariantName]['allowedAspectRatios'])) {
+            return [];
+        }
+        return array_keys($cropVariants[$cropVariantName]['allowedAspectRatios']);
     }
 
     /**
      * Return merged (TCA and TCEFORM) config for "cropVariants"
      *
-     * @param int $pageUid
-     * @return array
+     * @return array[]
      */
     protected function getMergedCropVariants(int $pageUid): array
     {
@@ -142,10 +136,7 @@ class DataHandlerHook
     /**
      * Returns merged field config from TCA with field config from TCEFORM
      *
-     * @param string $table
-     * @param string $field
-     * @param int $pageUid
-     * @return array
+     * @return array[]
      */
     protected function getMergedFieldConfig(string $table, string $field, int $pageUid): array
     {
