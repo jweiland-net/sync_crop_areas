@@ -7,6 +7,11 @@
 ChangeLog
 =========
 
+**Version 2.0.1**
+
+- Remove PHP 7.2 and PHP 7.3 compatibility
+- BUGFIX: Check selected ratio of other cropVariants before copy
+
 **Version 2.0.0**
 
 - Remove TYPO3 9 compatibility
