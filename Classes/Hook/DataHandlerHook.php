@@ -11,9 +11,11 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Hook;
 
-use TYPO3\CMS\Backend\Form\Utility\FormEngineUtility;
+use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\SysLog\Action\Database as DatabaseAction;
+use TYPO3\CMS\Core\SysLog\Error as SystemLogErrorClassification;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 
 /**
@@ -21,6 +23,13 @@ use TYPO3\CMS\Core\Utility\ArrayUtility;
  */
 class DataHandlerHook
 {
+    protected UpdateCropVariantsService $updateCropVariantsService;
+
+    public function __construct(UpdateCropVariantsService $updateCropVariantsService)
+    {
+        $this->updateCropVariantsService = $updateCropVariantsService;
+    }
+
     public function processDatamap_postProcessFieldArray(
         string $status,
         string $table,
@@ -35,33 +44,21 @@ class DataHandlerHook
             && !empty($sysFileReferenceRecord['sync_crop_area'])
         ) {
             [$pageUid] = BackendUtility::getTSCpid($table, $id, $sysFileReferenceRecord['pid'] ?? 0);
-            // We need at least 2 CropVariants. With just 1 there is no target to copy something over ;-)
-            $cropVariants = json_decode($sysFileReferenceRecord['crop'], true, 512, JSON_THROW_ON_ERROR) ?? [];
-            if (is_array($cropVariants) && count($cropVariants) > 1) {
-                $firstCropVariant = current($cropVariants);
-                if ($this->isValidCropVariant($firstCropVariant)) {
-                    foreach ($cropVariants as $cropVariantName => &$cropVariant) {
-                        // Don't modify first CropVariant
-                        if ($cropVariant === $firstCropVariant) {
-                            continue;
-                        }
 
-                        if (
-                            $this->isValidCropVariant($cropVariant)
-                            && $this->isSelectedRatioAvailableInForeignCropVariant(
-                                $cropVariantName,
-                                $firstCropVariant['selectedRatio'],
-                                (int)$pageUid
-                            )
-                        ) {
-                            $cropVariant['selectedRatio'] = $firstCropVariant['selectedRatio'];
-                            $cropVariant['cropArea'] = $firstCropVariant['cropArea'];
-                        }
-                    }
-
-                    unset($cropVariant);
-                    $fieldArray['crop'] = json_encode($cropVariants, JSON_THROW_ON_ERROR);
-                }
+            try {
+                $fieldArray['crop'] = $this->updateCropVariantsService->synchronizeCropVariants(
+                    $sysFileReferenceRecord['crop'],
+                    $pageUid
+                );
+            } catch (\JsonException $jsonException) {
+                $dataHandler->log(
+                    'sys_file_reference',
+                    (int)$sysFileReferenceRecord['uid'],
+                    DatabaseAction::UPDATE,
+                    (int)$pageUid,
+                    SystemLogErrorClassification::SYSTEM_ERROR,
+                    'EXT: sync_crop_areas: Column "crop" contains empty or invalid JSON string.'
+                );
             }
         }
     }
@@ -75,7 +72,7 @@ class DataHandlerHook
      *
      * @param DataHandler $dataHandler Needed to get the full "old" DB record
      * @param array $fieldArray Needed to overwrite values in old DB record with the updated properties
-     * @return array[] Returns full DB record with updated values
+     * @return string[]|int[] Returns full DB record with updated values
      */
     protected function getSysFileReferenceRecord(DataHandler $dataHandler, array $fieldArray): array
     {
@@ -83,77 +80,5 @@ class DataHandlerHook
         ArrayUtility::mergeRecursiveWithOverrule($fullDbRecordBeforeSave, $fieldArray);
 
         return $fullDbRecordBeforeSave;
-    }
-
-    /**
-     * Test, if $selectedRatio is available in CropVariant named $cropVariantName
-     */
-    protected function isSelectedRatioAvailableInForeignCropVariant(string $cropVariantName, string $selectedRatio, int $pageUid): bool
-    {
-        return in_array($selectedRatio, $this->getAllowedAspectRatiosForCropVariant($cropVariantName, $pageUid), true);
-    }
-
-    /**
-     * Return allowed aspect ratios from merged (TCA and TCEFORM) config of cropVariants by name
-     *
-     * @return array[]
-     */
-    protected function getAllowedAspectRatiosForCropVariant(string $cropVariantName, int $pageUid): array
-    {
-        $cropVariants = $this->getMergedCropVariants($pageUid);
-        if (!array_key_exists($cropVariantName, $cropVariants)) {
-            return [];
-        }
-        if (!array_key_exists('allowedAspectRatios', $cropVariants[$cropVariantName])) {
-            return [];
-        }
-        if (!is_array($cropVariants[$cropVariantName]['allowedAspectRatios'])) {
-            return [];
-        }
-        return array_keys($cropVariants[$cropVariantName]['allowedAspectRatios']);
-    }
-
-    /**
-     * Return merged (TCA and TCEFORM) config for "cropVariants"
-     *
-     * @return array[]
-     */
-    protected function getMergedCropVariants(int $pageUid): array
-    {
-        $mergedCropVariants = [];
-
-        $fieldConfig = $this->getMergedFieldConfig('sys_file_reference', 'crop', $pageUid);
-        if (
-            isset($fieldConfig['cropVariants'])
-            && is_array($fieldConfig['cropVariants'])
-        ) {
-            $mergedCropVariants = $fieldConfig['cropVariants'];
-        }
-
-        return $mergedCropVariants;
-    }
-
-    /**
-     * Returns merged field config from TCA with field config from TCEFORM
-     *
-     * @return array[]
-     */
-    protected function getMergedFieldConfig(string $table, string $field, int $pageUid): array
-    {
-        $tcaConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'] ?? [];
-        $pagesTsConfig = BackendUtility::getPagesTSconfig($pageUid);
-        $fieldTsConfig = $pagesTsConfig['TCEFORM.'][$table . '.'][$field . '.'] ?? [];
-
-        return FormEngineUtility::overrideFieldConf($tcaConfig, $fieldTsConfig);
-    }
-
-    protected function isValidCropVariant(array $cropVariant): bool
-    {
-        return
-            array_key_exists('cropArea', $cropVariant)
-            && array_key_exists('selectedRatio', $cropVariant)
-            && is_array($cropVariant['cropArea'])
-            && !empty($cropVariant['cropArea'])
-            && !empty($cropVariant['selectedRatio']);
     }
 }
