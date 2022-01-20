@@ -11,7 +11,6 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Command;
 
-
 use Doctrine\DBAL\Driver\Statement;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Symfony\Component\Console\Command\Command;
@@ -33,7 +32,8 @@ class SynchronizeCropVariantsCommand extends Command
     /*
      * Will be called by DI, so please don't add extbase classes with inject methods here.
      */
-    public function __construct(UpdateCropVariantsService $updateCropVariantsService, string $name = null) {
+    public function __construct(UpdateCropVariantsService $updateCropVariantsService, string $name = null)
+    {
         parent::__construct($name);
 
         $this->updateCropVariantsService = $updateCropVariantsService;
