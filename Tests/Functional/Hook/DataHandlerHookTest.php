@@ -12,6 +12,7 @@ declare(strict_types=1);
 namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
 
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
+use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
 use Prophecy\Prophecy\ObjectProphecy;
@@ -88,7 +89,9 @@ class DataHandlerHookTest extends FunctionalTestCase
         ];
         $this->dataHandler = $dataHandler;
 
-        $this->subject = new DataHandlerHook();
+        $this->subject = new DataHandlerHook(
+            new UpdateCropVariantsService()
+        );
     }
 
     protected function tearDown(): void
