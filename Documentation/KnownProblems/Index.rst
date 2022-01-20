@@ -13,10 +13,26 @@ I can't copy 2nd or 3rd cropVariant to all other cropVariants
 Currently we only support copying the cropArea of the first cropVariant. So, you can't decide to copy
 the cropArea of the second or fourth cropVariant back to all other cropVariants
 
-In our DataHandler Hook we currently don't check, if first cropArea with its ratio is allowed for all other
-cropVariants. So please try to keep the ratios for all cropVariants the same! In detail: the ratio of the first
-cropVariant has to be configured in all other cropVariants. It is no problem, if you have configured
-further ratios for all other cropVariants.
+In our DataHandler Hook we check, if first cropArea with its ratio is allowed for all other cropVariants. If a
+CropVariant does not have the ratio of the first CropVariant sync_crop_areas keeps this CropVariant untouched.
+
+Please check, if your editors have access rights to column sys_file_reference:sync_crop_area. This column is deactivated
+by default, so, if an editor has no rights for this column, the CropVariants can't be synchronized.
+
+
+.. _known-problems_project-upgrade:
+
+Is there an automatism to upgrade all sys_file_reference records?
+=================================================================
+
+If you add sync_crop_areas the first time to a project or you have added further CropVariants, you may have the problem
+that you have 1000s of sys_file_reference records which have CropVariants out-of-sync. Instead of opening each
+record and save it, you can use a CLI command or scheduler task.
+
+**Command**: `vendor/bin/typo3 sync_crop_areas:sync`
+
+**Task**: Choose `Execute console commands` -> `sync_crop_areas:sync` -> execute task once.
+
 
 .. _known-problems_not-working:
 
