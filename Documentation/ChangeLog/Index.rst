@@ -7,6 +7,12 @@
 ChangeLog
 =========
 
+**Version 2.1.0**
+
+- Move CropVariant synchronization into its own Service class
+- DataHandler hook uses synchronization service to process records
+- Add schedulable symfony command to process all sys_file_reference records
+
 **Version 2.0.1**
 
 - Remove PHP 7.2 and PHP 7.3 compatibility
