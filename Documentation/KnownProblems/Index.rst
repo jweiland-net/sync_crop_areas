@@ -18,6 +18,19 @@ cropVariants. So please try to keep the ratios for all cropVariants the same! In
 cropVariant has to be configured in all other cropVariants. It is no problem, if you have configured
 further ratios for all other cropVariants.
 
+
+Is there an automatism to upgrade all sys_file_reference records?
+=================================================================
+
+If you add sync_crop_areas the first time to a project or you have added further CropVariants, you may have the problem
+that you have 1000s of sys_file_reference records which have CropVariants out-of-sync. Instead of opening each
+record and save it, you can use a CLI command or scheduler task.
+
+**Command**: `vendor/bin/typo3 sync_crop_areas:sync`
+
+**Task**: Choose `Execute console commands` -> `sync_crop_areas:sync` -> execute task once.
+
+
 sync_crop_areas does not work for columns of extension XY
 ---------------------------------------------------------
 
