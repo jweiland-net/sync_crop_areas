@@ -9,10 +9,9 @@ declare(strict_types=1);
  * LICENSE file that was distributed with this source code.
  */
 
-namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
+namespace JWeiland\SyncCropAreas\Tests\Functional\Service;
 
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
-use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use Prophecy\PhpUnit\ProphecyTrait;
@@ -20,13 +19,12 @@ use Prophecy\Prophecy\ObjectProphecy;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Test case.
  */
-class DataHandlerHookTest extends FunctionalTestCase
+class UpdateCropVariantsServiceTest extends FunctionalTestCase
 {
     use ProphecyTrait;
 
@@ -37,9 +35,7 @@ class DataHandlerHookTest extends FunctionalTestCase
         'typo3conf/ext/sync_crop_areas'
     ];
 
-    protected DataHandlerHook $subject;
-
-    protected DataHandler $dataHandler;
+    protected UpdateCropVariantsService $subject;
 
     /**
      * Cropping example with equal selectedRatio but different cropArea
@@ -69,31 +65,12 @@ class DataHandlerHookTest extends FunctionalTestCase
     {
         parent::setUp();
 
+        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
+        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+
         $this->activateTcaCropVariants();
 
-        /** @var DataHandler $dataHandler */
-        $dataHandler = $this->prophesize(DataHandler::class)->reveal();
-        $dataHandler->checkValue_currentRecord = [
-            'uid' => 123,
-            'pid' => 53,
-            'tstamp' => time(),
-            'crdate' => time(),
-            'cruser_id' => 1,
-            'hidden' => 0,
-            'deleted' => 0,
-            'sys_language_uid' => 0,
-            'uid_local' => 1,
-            'uid_foreign' => 1,
-            'tablenames' => 'tt_content',
-            'fieldname' => 'media',
-            'table_local' => 'sys_file'
-        ];
-        $this->dataHandler = $dataHandler;
-
-        $this->subject = new DataHandlerHook(
-            new UpdateCropVariantsService(
-                new TcaHelper()
-            ),
+        $this->subject = new UpdateCropVariantsService(
             new TcaHelper()
         );
     }
@@ -101,8 +78,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     protected function tearDown(): void
     {
         unset(
-            $this->subject,
-            $this->dataHandler
+            $this->subject
         );
 
         parent::tearDown();
@@ -231,224 +207,82 @@ class DataHandlerHookTest extends FunctionalTestCase
     }
 
     /**
-     * @test
+     * @tester
      */
-    public function processDatamapWithDeactivatedFeatureWillNotChangeFieldArray(): void
+    public function synchronizeCropVariantsWithDeactivatedFeatureWillNotChangeRecord(): void
     {
-        $fieldArray = [
+        $sysFileReference = [
+            'uid' => 1,
             'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
             'sync_crop_area' => 0
         ];
-        $expectedFieldArray = [
-            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 0
-        ];
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
+        self::assertSame(
+            $sysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
         );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
     }
 
-    /**
-     * @test
-     */
-    public function processDatamapWithWrongTableWillNotChangeFieldArray(): void
+    public function invalidSysFileReferenceDataProvider(): array
     {
-        $fieldArray = [
-            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
+        return [
+            'Missing sync_crop_area column' => [['crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
+            'Empty sync_crop_area column' => [['sync_crop_area' => 0, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'tt_content',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
+            'Missing crop column' => [['sync_crop_area' => 1, 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
+            'Empty crop column' => [['sync_crop_area' => 1, 'crop' => '', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
 
-        self::assertSame($expectedFieldArray, $fieldArray);
+            'Missing tablenames column' => [['sync_crop_area' => 1, 'crop' => '{}', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
+            'Empty tablenames column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => '', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],
+
+            'Missing fieldname column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'uid_foreign' => 1, 'pid' => 2]],
+            'Empty fieldname column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => '', 'uid_foreign' => 1, 'pid' => 2]],
+
+            'Missing uid_foreign column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'pid' => 2]],
+            'Empty uid_foreign column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 0, 'pid' => 2]],
+
+            'Missing pid column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1]],
+            'Empty pid column' => [['sync_crop_area' => 1, 'crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 0]],
+        ];
     }
 
     /**
-     * @test
+     * @tester
+     *
+     * @dataProvider invalidSysFileReferenceDataProvider
      */
-    public function processDatamapWithEmptyCropWillNotChangeFieldArray(): void
+    public function synchronizeCropVariantsWithInvalidRecordWillNotChangeRecord(array $sysFileReference): void
     {
-        $fieldArray = [
-            'crop' => [],
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => [],
-            'sync_crop_area' => 1
-        ];
-
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
+        self::assertSame(
+            $sysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
         );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
     }
 
     /**
      * @test
      */
-    public function processDatamapWithMissingSelectedRatioWillNotChangeFieldArray(): void
+    public function synchronizeCropVariantsWithOneCropVariantWillNotChangeFieldArray(): void
     {
-        $crop = $this->crop;
-        unset($crop['desktop']['selectedRatio']);
-
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => '{"desktop":{"cropArea":{"x":0.017092203898050978,"y":0.029985007496251874,"width":0.36881559220389803,"height":0.36881559220389803},"selectedRatio":"3:2","focusArea":null}}',
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
         ];
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
+        self::assertSame(
+            $sysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
         );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
     }
 
     /**
-     * @test
+     * @tester
      */
-    public function processDatamapWithEmptySelectedRatioWillNotChangeFieldArray(): void
-    {
-        $crop = $this->crop;
-        $crop['desktop']['selectedRatio'] = '';
-
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
-    }
-
-    /**
-     * @test
-     */
-    public function processDatamapWithMissingCropAreaWillNotChangeFieldArray(): void
-    {
-        $crop = $this->crop;
-        unset($crop['desktop']['cropArea']);
-
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
-    }
-
-    /**
-     * @test
-     */
-    public function processDatamapWithEmptyCropAreaWillNotChangeFieldArray(): void
-    {
-        $crop = $this->crop;
-        $crop['desktop']['cropArea'] = [];
-
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
-    }
-
-    /**
-     * @test
-     */
-    public function processDatamapWithOneCropVariantWillNotChangeFieldArray(): void
-    {
-        $crop = $this->crop;
-        unset($crop['mobile']);
-
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
-    }
-
-    /**
-     * @test
-     */
-    public function processDatamapWithNonMatchingSelectedRatiosWillNotChangeFieldArray(): void
+    public function synchronizeCropVariantsWithNonMatchingSelectedRatiosWillNotChangeFieldArray(): void
     {
         $crop = $this->crop;
         $crop['mobile']['selectedRatio'] = '16:9';
@@ -474,9 +308,9 @@ class DataHandlerHookTest extends FunctionalTestCase
     }
 
     /**
-     * @test
+     * @tester
      */
-    public function processDatamapWillChangeFieldArrayForTcaDefinedCropVariants(): void
+    public function synchronizeCropVariantsWillChangeFieldArrayForTcaDefinedCropVariants(): void
     {
         $crop = $this->crop;
         $crop['desktop']['selectedRatio'] = 'NaN';
@@ -505,9 +339,9 @@ class DataHandlerHookTest extends FunctionalTestCase
     }
 
     /**
-     * @test
+     * @tester
      */
-    public function processDatamapWillChangeFieldArrayForPageTsConfigDefinedCropVariants(): void
+    public function synchronizeCropVariantsWillChangeFieldArrayForPageTsConfigDefinedCropVariants(): void
     {
         $this->disableTcaCropVariants();
         $this->activatePageTsConfigCropVariants();

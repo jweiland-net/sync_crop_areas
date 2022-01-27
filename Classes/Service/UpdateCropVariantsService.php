@@ -197,6 +197,22 @@ class UpdateCropVariantsService
 
     protected function isValidSysFileReference(array $sysFileReference): bool
     {
+        if (!array_key_exists('sync_crop_area', $sysFileReference)) {
+            return false;
+        }
+
+        if ((int)$sysFileReference['sync_crop_area'] === 0) {
+            return false;
+        }
+
+        if (!array_key_exists('crop', $sysFileReference)) {
+            return false;
+        }
+
+        if ($sysFileReference['crop'] === '') {
+            return false;
+        }
+
         if (!array_key_exists('tablenames', $sysFileReference)) {
             return false;
         }
