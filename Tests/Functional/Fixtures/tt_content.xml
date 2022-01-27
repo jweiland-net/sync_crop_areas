@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<dataset>
+	<tt_content>
+		<uid>1</uid>
+		<pid>12</pid>
+		<tstamp>1551266318</tstamp>
+		<hidden>0</hidden>
+		<deleted>0</deleted>
+		<cruser_id>1</cruser_id>
+		<header>One image</header>
+		<image>1</image>
+	</tt_content>
+	<tt_content>
+		<uid>2</uid>
+		<pid>12</pid>
+		<tstamp>1551266318</tstamp>
+		<hidden>0</hidden>
+		<deleted>0</deleted>
+		<cruser_id>1</cruser_id>
+		<header>Two images</header>
+		<image>2</image>
+	</tt_content>
+</dataset>
