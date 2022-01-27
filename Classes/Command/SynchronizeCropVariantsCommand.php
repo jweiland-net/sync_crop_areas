@@ -93,27 +93,28 @@ class SynchronizeCropVariantsCommand extends Command
                 continue;
             }
 
-            try {
+            $updatedSysFileReferenceRecord = $this->updateCropVariantsService->synchronizeCropVariants(
+                $sysFileReferenceRecord
+            );
+
+            if ($sysFileReferenceRecord['crop'] === $updatedSysFileReferenceRecord['crop']) {
+                $this->output->writeln(sprintf(
+                    'SKIP: Column "crop" of table "sys_file_reference" with UID %d because it is unchanged, empty or invalid JSON',
+                    (int)$sysFileReferenceRecord['uid']
+                ));
+                $skipped++;
+            } else {
                 $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
                 $connection->update(
                     'sys_file_reference',
                     [
-                        'crop' => $this->updateCropVariantsService->synchronizeCropVariants(
-                            (string)$sysFileReferenceRecord['crop'],
-                            (int)$sysFileReferenceRecord['pid']
-                        )
+                        'crop' => $updatedSysFileReferenceRecord['crop']
                     ],
                     [
                         'uid' => (int)$sysFileReferenceRecord['uid']
                     ]
                 );
                 $processed++;
-            } catch (\JsonException $jsonException) {
-                $this->output->writeln(sprintf(
-                    'SKIP: Column "crop" of sys_file_reference record with UID %d contains invalid JSON string',
-                    (int)$sysFileReferenceRecord['uid']
-                ));
-                $skipped++;
             }
         }
 

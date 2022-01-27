@@ -11,128 +11,240 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Service;
 
-use TYPO3\CMS\Backend\Form\Utility\FormEngineUtility;
+use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Imaging\ImageManipulation\Area;
+use TYPO3\CMS\Core\Imaging\ImageManipulation\CropVariant;
+use TYPO3\CMS\Core\Imaging\ImageManipulation\CropVariantCollection;
+use TYPO3\CMS\Core\Imaging\ImageManipulation\InvalidConfigurationException;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 
 /**
  * Use this service to synchronize first found cropVariants to the other defined cropVariants
  */
 class UpdateCropVariantsService
 {
+    protected TcaHelper $tcaHelper;
+
+    /**
+     * Default element configuration
+     * SF: Copied from ImageManipulationElement
+     *
+     * @var array
+     */
+    protected static $defaultConfig = [
+        'file_field' => 'uid_local',
+        'allowedExtensions' => null, // default: $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext']
+        'cropVariants' => [
+            'default' => [
+                'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.crop_variant.default',
+                'allowedAspectRatios' => [
+                    '16:9' => [
+                        'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.16_9',
+                        'value' => 16 / 9,
+                    ],
+                    '3:2' => [
+                        'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.3_2',
+                        'value' => 3 / 2,
+                    ],
+                    '4:3' => [
+                        'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.4_3',
+                        'value' => 4 / 3,
+                    ],
+                    '1:1' => [
+                        'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.1_1',
+                        'value' => 1.0,
+                    ],
+                    'NaN' => [
+                        'title' => 'LLL:EXT:core/Resources/Private/Language/locallang_wizards.xlf:imwizard.ratio.free',
+                        'value' => 0.0,
+                    ],
+                ],
+                'selectedRatio' => 'NaN',
+                'cropArea' => [
+                    'x' => 0.0,
+                    'y' => 0.0,
+                    'width' => 1.0,
+                    'height' => 1.0,
+                ],
+            ],
+        ],
+    ];
+
+    public function __construct(TcaHelper $tcaHelper)
+    {
+        $this->tcaHelper = $tcaHelper;
+    }
+
     /**
      * Copy first found CropArea to all other CropVariants as long as selectedRatio matches
      *
-     * @param string $cropVariantsAsJSON The JSON string from column "crop" of sys_file_reference
-     * @param int $pageUid The pageUid is needed to extract the PageTSConfig to merge cropVariants from TCA and PageTSConfig
-     * @return string The new cropVariants in JSON format
-     * @throws \JsonException
+     * @param array $sysFileReference The full sys_file_reference record to update the crop column for.
+     * @return array The sys_file_reference record with updated crop column. It's up to you to store this record now or not.
+     * @throws InvalidConfigurationException
      */
-    public function synchronizeCropVariants(string $cropVariantsAsJSON, int $pageUid): string
+    public function synchronizeCropVariants(array $sysFileReference): array
     {
-        // We need at least 2 CropVariants. With just 1 there is no target to copy something over ;-)
-        $cropVariants = json_decode($cropVariantsAsJSON, true, 512, JSON_THROW_ON_ERROR) ?? [];
-        if (is_array($cropVariants) && count($cropVariants) > 1) {
-            $firstCropVariant = current($cropVariants);
-            if ($this->isValidCropVariant($firstCropVariant)) {
-                foreach ($cropVariants as $cropVariantName => &$cropVariant) {
-                    // Don't modify first CropVariant
-                    if ($cropVariant === $firstCropVariant) {
-                        continue;
-                    }
+        // After that we can be sure that tablenames, fieldname, crop and pid are available and filled with data
+        if (!$this->isValidSysFileReference($sysFileReference)) {
+            return $sysFileReference;
+        }
 
-                    if (
-                        $this->isValidCropVariant($cropVariant)
-                        && $this->isSelectedRatioAvailableInForeignCropVariant(
-                            $cropVariantName,
-                            $firstCropVariant['selectedRatio'],
-                            $pageUid
-                        )
-                    ) {
-                        $cropVariant['selectedRatio'] = $firstCropVariant['selectedRatio'];
-                        $cropVariant['cropArea'] = $firstCropVariant['cropArea'];
-                    }
-                }
+        // Get TCA and PageTSConfig merged CropVariants
+        $mergedCropVariants = $this->tcaHelper->getMergedCropVariants(
+            $sysFileReference['tablenames'],
+            $sysFileReference['fieldname'],
+            $sysFileReference['pid'],
+            $this->tcaHelper->getTypeOfRecord(
+                $this->getForeignRecord($sysFileReference['tablenames'], (int)$sysFileReference['uid_foreign']),
+                $sysFileReference['tablenames']
+            )
+        );
 
-                unset($cropVariant);
-                $cropVariantsAsJSON = json_encode($cropVariants, JSON_THROW_ON_ERROR);
+        try {
+            $persistedCropVariants = CropVariantCollection::create(
+                $sysFileReference['crop'],
+                $this->populateConfiguration(['cropVariants' => $mergedCropVariants])['cropVariants']
+            )->asArray();
+
+            if (count($persistedCropVariants) <= 1) {
+                return $sysFileReference;
             }
+        } catch (InvalidConfigurationException $invalidConfigurationException) {
+            return $sysFileReference;
         }
 
-        return $cropVariantsAsJSON;
+        $firstPersistedCropVariantConfiguration = current($persistedCropVariants);
+
+        $updatedCropVariants = [];
+        foreach ($persistedCropVariants as $name => $persistedCropVariantConfiguration) {
+            if (
+                $persistedCropVariantConfiguration !== $firstPersistedCropVariantConfiguration
+                && $this->isSelectedRatioAvailableInCurrentCropVariantConfiguration(
+                    $persistedCropVariantConfiguration,
+                    $firstPersistedCropVariantConfiguration
+                )
+            ) {
+                $persistedCropVariantConfiguration['selectedRatio'] = $firstPersistedCropVariantConfiguration['selectedRatio'];
+                $persistedCropVariantConfiguration['cropArea'] = $firstPersistedCropVariantConfiguration['cropArea'];
+            }
+
+            $updatedCropVariants[] = CropVariant::createFromConfiguration($name, $persistedCropVariantConfiguration);
+        }
+
+        $updatedCropVariantCollection = GeneralUtility::makeInstance(
+            CropVariantCollection::class,
+            $updatedCropVariants
+        );
+
+        $sysFileReference['crop'] = (string)$updatedCropVariantCollection;
+
+        return $sysFileReference;
     }
 
     /**
-     * Test, if $selectedRatio is available in CropVariant named $cropVariantName
+     * SF: This is a copy from ImageManipulationElement, because I can't access the method as it is declared
+     * as protected.
+     *
+     * @throws InvalidConfigurationException
      */
-    protected function isSelectedRatioAvailableInForeignCropVariant(
-        string $cropVariantName,
-        string $selectedRatio,
-        int $pageUid
+    protected function populateConfiguration(array $baseConfiguration): array
+    {
+        $defaultConfig = self::$defaultConfig;
+
+        // If ratios are set do not add default options
+        if (isset($baseConfiguration['cropVariants'])) {
+            unset($defaultConfig['cropVariants']);
+        }
+
+        $config = array_replace_recursive($defaultConfig, $baseConfiguration);
+
+        if (!is_array($config['cropVariants'])) {
+            throw new InvalidConfigurationException('Crop variants configuration must be an array', 1485377267);
+        }
+
+        $cropVariants = [];
+        foreach ($config['cropVariants'] as $id => $cropVariant) {
+            // Filter allowed aspect ratios
+            $cropVariant['allowedAspectRatios'] = array_filter($cropVariant['allowedAspectRatios'] ?? [], static function ($aspectRatio) {
+                return !(bool)($aspectRatio['disabled'] ?? false);
+            });
+
+            // Ignore disabled crop variants
+            if (!empty($cropVariant['disabled'])) {
+                continue;
+            }
+
+            if (empty($cropVariant['allowedAspectRatios'])) {
+                throw new InvalidConfigurationException('Crop variants configuration ' . $id . ' contains no allowed aspect ratios', 1620147893);
+            }
+
+            // Enforce a crop area (default is full image)
+            if (empty($cropVariant['cropArea'])) {
+                $cropVariant['cropArea'] = Area::createEmpty()->asArray();
+            }
+
+            $cropVariants[$id] = $cropVariant;
+        }
+
+        $config['cropVariants'] = $cropVariants;
+
+        // By default, we allow all image extensions that can be handled by the GFX functionality
+        $config['allowedExtensions'] ??= $GLOBALS['TYPO3_CONF_VARS']['GFX']['imagefile_ext'];
+
+        return $config;
+    }
+
+    protected function isValidSysFileReference(array $sysFileReference): bool
+    {
+        if (!array_key_exists('tablenames', $sysFileReference)) {
+            return false;
+        }
+
+        if ($sysFileReference['tablenames'] === '') {
+            return false;
+        }
+
+        if (!array_key_exists('fieldname', $sysFileReference)) {
+            return false;
+        }
+
+        if ($sysFileReference['fieldname'] === '') {
+            return false;
+        }
+
+        if (!array_key_exists('uid_foreign', $sysFileReference)) {
+            return false;
+        }
+
+        if ((int)$sysFileReference['uid_foreign'] === 0) {
+            return false;
+        }
+
+        if (!array_key_exists('pid', $sysFileReference)) {
+            return false;
+        }
+
+        if ((int)$sysFileReference['pid'] === 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    protected function getForeignRecord(string $table, int $uid): array
+    {
+        return BackendUtility::getRecord($table, $uid) ?? [];
+    }
+
+    protected function isSelectedRatioAvailableInCurrentCropVariantConfiguration(
+        array $currentPersistedCropVariantConfiguration,
+        array $firstPersistedCropVariantConfiguration
     ): bool {
-        return in_array($selectedRatio, $this->getAllowedAspectRatiosForCropVariant($cropVariantName, $pageUid), true);
-    }
 
-    /**
-     * Return allowed aspect ratios from merged (TCA and TCEFORM) config of cropVariants by name
-     *
-     * @return array[]
-     */
-    protected function getAllowedAspectRatiosForCropVariant(string $cropVariantName, int $pageUid): array
-    {
-        $cropVariants = $this->getMergedCropVariants($pageUid);
-        if (!array_key_exists($cropVariantName, $cropVariants)) {
-            return [];
-        }
-        if (!array_key_exists('allowedAspectRatios', $cropVariants[$cropVariantName])) {
-            return [];
-        }
-        if (!is_array($cropVariants[$cropVariantName]['allowedAspectRatios'])) {
-            return [];
-        }
-        return array_keys($cropVariants[$cropVariantName]['allowedAspectRatios']);
-    }
-
-    /**
-     * Return merged (TCA and TCEFORM) config for "cropVariants"
-     *
-     * @return array[]
-     */
-    protected function getMergedCropVariants(int $pageUid): array
-    {
-        $mergedCropVariants = [];
-
-        $fieldConfig = $this->getMergedFieldConfig('sys_file_reference', 'crop', $pageUid);
-        if (
-            isset($fieldConfig['cropVariants'])
-            && is_array($fieldConfig['cropVariants'])
-        ) {
-            $mergedCropVariants = $fieldConfig['cropVariants'];
-        }
-
-        return $mergedCropVariants;
-    }
-
-    /**
-     * Returns merged field config from TCA with field config from TCEFORM
-     *
-     * @return array[]
-     */
-    protected function getMergedFieldConfig(string $table, string $field, int $pageUid): array
-    {
-        $tcaConfig = $GLOBALS['TCA'][$table]['columns'][$field]['config'] ?? [];
-        $pagesTsConfig = BackendUtility::getPagesTSconfig($pageUid);
-        $fieldTsConfig = $pagesTsConfig['TCEFORM.'][$table . '.'][$field . '.'] ?? [];
-
-        return FormEngineUtility::overrideFieldConf($tcaConfig, $fieldTsConfig);
-    }
-
-    protected function isValidCropVariant(array $cropVariant): bool
-    {
-        return
-            array_key_exists('cropArea', $cropVariant)
-            && array_key_exists('selectedRatio', $cropVariant)
-            && is_array($cropVariant['cropArea'])
-            && !empty($cropVariant['cropArea'])
-            && !empty($cropVariant['selectedRatio']);
+        return array_key_exists(
+            $firstPersistedCropVariantConfiguration['selectedRatio'],
+            $currentPersistedCropVariantConfiguration['allowedAspectRatios']
+        );
     }
 }
