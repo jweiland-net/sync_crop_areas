@@ -37,9 +37,6 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
 
     protected UpdateCropVariantsService $subject;
 
-    /**
-     * Cropping example with equal selectedRatio but different cropArea
-     */
     protected array $crop = [
         'desktop' => [
             'cropArea' => [
@@ -49,6 +46,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                 'height' => 1
             ],
             'selectedRatio' => '4:3',
+            'focusArea' => null
         ],
         'mobile' => [
             'cropArea' => [
@@ -58,6 +56,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                 'height' => 0.85
             ],
             'selectedRatio' => '16:9',
+            'focusArea' => null
         ],
     ];
 
@@ -126,7 +125,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         /** @var FrontendInterface|ObjectProphecy $runtimeCacheProphecy */
         $runtimeCacheProphecy = $this->prophesize(VariableFrontend::class);
         $runtimeCacheProphecy
-            ->get('pagesTsConfigIdToHash53')
+            ->get('pagesTsConfigIdToHash1')
             ->willReturn('Id2Hash');
         $runtimeCacheProphecy
             ->get('pagesTsConfigHashToContentId2Hash')
@@ -207,7 +206,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
     }
 
     /**
-     * @tester
+     * @test
      */
     public function synchronizeCropVariantsWithDeactivatedFeatureWillNotChangeRecord(): void
     {
@@ -247,7 +246,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
     }
 
     /**
-     * @tester
+     * @test
      *
      * @dataProvider invalidSysFileReferenceDataProvider
      */
@@ -264,6 +263,11 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
      */
     public function synchronizeCropVariantsWithOneCropVariantWillNotChangeFieldArray(): void
     {
+        $this->activateTcaCropVariants();
+
+        // Now we have just ONE CropVariant configuration
+        unset($GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']['mobile']);
+
         $sysFileReference = [
             'sync_crop_area' => 1,
             'crop' => '{"desktop":{"cropArea":{"x":0.017092203898050978,"y":0.029985007496251874,"width":0.36881559220389803,"height":0.36881559220389803},"selectedRatio":"3:2","focusArea":null}}',
@@ -280,31 +284,25 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
     }
 
     /**
-     * @tester
+     * @test
      */
     public function synchronizeCropVariantsWithNonMatchingSelectedRatiosWillNotChangeFieldArray(): void
     {
-        $crop = $this->crop;
-        $crop['mobile']['selectedRatio'] = '16:9';
+        $this->activateTcaCropVariants();
 
-        $fieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
         ];
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
+        self::assertSame(
+            $sysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
         );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
     }
 
     /**
@@ -315,31 +313,30 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $crop = $this->crop;
         $crop['desktop']['selectedRatio'] = 'NaN';
 
-        $fieldArray = [
+        $this->activateTcaCropVariants();
+
+        $sysFileReference = [
+            'sync_crop_area' => 1,
             'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
         ];
 
         $crop['mobile']['selectedRatio'] = 'NaN';
         $crop['mobile']['cropArea'] = $this->crop['desktop']['cropArea'];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
-        ];
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
+        self::assertSame(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
         );
-
-        self::assertSame($expectedFieldArray, $fieldArray);
     }
 
     /**
-     * @tester
+     * @test
      */
     public function synchronizeCropVariantsWillChangeFieldArrayForPageTsConfigDefinedCropVariants(): void
     {
@@ -347,31 +344,60 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $this->activatePageTsConfigCropVariants();
 
         $crop = $this->crop;
-        $crop['smartphone'] = $crop['mobile'];
         $crop['tablet'] = $crop['mobile'];
+        $crop['smartphone'] = $crop['mobile'];
         $crop['desktop']['selectedRatio'] = '16:9';
         unset($crop['mobile']);
 
-        $fieldArray = [
+        $sysFileReference = [
+            'sync_crop_area' => 1,
             'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
         ];
 
         $crop['tablet'] = $crop['desktop'];
         $crop['smartphone'] = $crop['desktop'];
-        $expectedFieldArray = [
-            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 1
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
+
+        self::assertSame(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function synchronizeCropVariantsWillChangeFieldArrayForMergedCropVariants(): void
+    {
+        $this->activateTcaCropVariants();
+        $this->activatePageTsConfigCropVariants();
+
+        // Crop contains just two CropVariants.
+        // This test also checks, if the two new CropVariants were also added
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
         ];
 
-        $this->subject->processDatamap_postProcessFieldArray(
-            'update',
-            'sys_file_reference',
-            123,
-            $fieldArray,
-            $this->dataHandler
-        );
+        $crop = $this->crop;
+        $crop['tablet'] = $crop['desktop'];
+        $crop['smartphone'] = $crop['desktop'];
 
-        self::assertSame($expectedFieldArray, $fieldArray);
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
+
+        self::assertSame(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
     }
 }
