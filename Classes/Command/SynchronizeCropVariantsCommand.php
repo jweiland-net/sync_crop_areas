@@ -38,7 +38,7 @@ class SynchronizeCropVariantsCommand extends Command
     /*
      * Will be called by DI, so please don't add extbase classes with inject methods here.
      */
-    public function __construct(UpdateCropVariantsService $updateCropVariantsService = null, string $name = null)
+    public function __construct(UpdateCropVariantsService $updateCropVariantsService, string $name = null)
     {
         parent::__construct($name);
 
@@ -99,20 +99,29 @@ class SynchronizeCropVariantsCommand extends Command
                 continue;
             }
 
-            $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
-            $connection->update(
-                'sys_file_reference',
-                [
-                    'crop' => $this->updateCropVariantsService->synchronizeCropVariants(
-                        (string)$sysFileReferenceRecord['crop'],
-                        (int)$sysFileReferenceRecord['pid']
-                    )
-                ],
-                [
-                    'uid' => (int)$sysFileReferenceRecord['uid']
-                ]
+            $updatedSysFileReferenceRecord = $this->updateCropVariantsService->synchronizeCropVariants(
+                $sysFileReferenceRecord
             );
-            $processed++;
+
+            if ($sysFileReferenceRecord['crop'] === $updatedSysFileReferenceRecord['crop']) {
+                $this->output->writeln(sprintf(
+                    'SKIP: Column "crop" of table "sys_file_reference" with UID %d because it is unchanged, empty or invalid JSON',
+                    (int)$sysFileReferenceRecord['uid']
+                ));
+                $skipped++;
+            } else {
+                $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+                $connection->update(
+                    'sys_file_reference',
+                    [
+                        'crop' => $updatedSysFileReferenceRecord['crop']
+                    ],
+                    [
+                        'uid' => (int)$sysFileReferenceRecord['uid']
+                    ]
+                );
+                $processed++;
+            }
         }
 
         return [$counter, $processed, $skipped];
