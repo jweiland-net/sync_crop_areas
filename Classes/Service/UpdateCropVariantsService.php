@@ -257,7 +257,6 @@ class UpdateCropVariantsService
         array $currentPersistedCropVariantConfiguration,
         array $firstPersistedCropVariantConfiguration
     ): bool {
-
         return array_key_exists(
             $firstPersistedCropVariantConfiguration['selectedRatio'],
             $currentPersistedCropVariantConfiguration['allowedAspectRatios']
