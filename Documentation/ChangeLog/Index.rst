@@ -7,6 +7,13 @@
 ChangeLog
 =========
 
+**Version 2.2.0**
+
+- Feature: Respect TCA overrideChildTca
+- Feature: Respect TCA type based columnsOverrides
+- Feature: Add missing CropVariants. f.e. if new config was added
+- Feature: Use TYPO3 CropVariant API to build crop JSON
+
 **Version 2.1.0**
 
 - Move CropVariant synchronization into its own Service class
