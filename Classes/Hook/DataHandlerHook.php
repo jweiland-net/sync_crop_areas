@@ -67,11 +67,11 @@ class DataHandlerHook
                 continue;
             }
 
-            foreach ($sysFileReferenceRecords as $sysFileReferenceRecord) {
+            foreach ($sysFileReferenceRecords as $sysFileReferenceUid => $sysFileReferenceRecord) {
                 $sysFileReferenceRecord = $this->updateCropVariantsService->synchronizeCropVariants(
                     $sysFileReferenceRecord
                 );
-                $dataHandler->datamap['sys_file_reference'][$sysFileReferenceRecord['uid']]['crop']
+                $dataHandler->datamap['sys_file_reference'][$sysFileReferenceUid]['crop']
                     = $sysFileReferenceRecord['crop'];
             }
         }
