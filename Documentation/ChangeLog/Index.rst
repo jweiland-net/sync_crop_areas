@@ -6,6 +6,10 @@
 ChangeLog
 =========
 
+**Version 1.2.1**
+
+- Bugfix: Repair sync for new sys_file_reference records
+
 **Version 1.2.0**
 
 - Feature: Respect TCA overrideChildTca
