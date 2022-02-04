@@ -132,7 +132,7 @@ class DataHandlerHook
             return [];
         }
 
-        $sysFileReferenceIdentifiers = array_map(static function ($uid) use ($dataHandler) : int {
+        $sysFileReferenceIdentifiers = array_map(static function ($uid) use ($dataHandler): int {
             return array_key_exists($uid, $dataHandler->substNEWwithIDs)
                 ? (int)$dataHandler->substNEWwithIDs[$uid]
                 : (int)$uid;
