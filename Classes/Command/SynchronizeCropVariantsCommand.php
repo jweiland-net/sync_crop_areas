@@ -103,6 +103,10 @@ class SynchronizeCropVariantsCommand extends Command
                 $sysFileReferenceRecord
             );
 
+            if ($updatedSysFileReferenceRecord === []) {
+                continue;
+            }
+
             if ($sysFileReferenceRecord['crop'] === $updatedSysFileReferenceRecord['crop']) {
                 $this->output->writeln(sprintf(
                     'SKIP: Column "crop" of table "sys_file_reference" with UID %d because it is unchanged, empty or invalid JSON',

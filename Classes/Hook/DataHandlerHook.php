@@ -14,11 +14,12 @@ namespace JWeiland\SyncCropAreas\Hook;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use TYPO3\CMS\Backend\Utility\BackendUtility;
+use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Imaging\ImageManipulation\InvalidConfigurationException;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\Exception\MissingArrayPathException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\MathUtility;
 
 /**
  * Copy first found CropArea to all other CropVariants as long as selectedRatio matches
@@ -35,50 +36,56 @@ class DataHandlerHook
      */
     protected $tcaHelper;
 
-    public function __construct(UpdateCropVariantsService $updateCropVariantsService, TcaHelper $tcaHelper)
-    {
+    public function __construct(
+        UpdateCropVariantsService $updateCropVariantsService = null,
+        TcaHelper $tcaHelper = null
+    ) {
         $this->updateCropVariantsService = $updateCropVariantsService ?? GeneralUtility::makeInstance(UpdateCropVariantsService::class);
         $this->tcaHelper = $tcaHelper ?? GeneralUtility::makeInstance(TcaHelper::class);
     }
 
-    /**
-     * Be careful with $fieldArray. On UPDATE it just contains updated columns. All other columns were removed.
-     * See DataHandler::compareFieldArrayWithCurrentAndUnset()
-     */
-    public function processDatamap_postProcessFieldArray(
-        string $status,
-        string $table,
-        $id,
-        array &$fieldArray,
-        DataHandler $dataHandler
-    ): void {
+    public function processDatamap_afterAllOperations(DataHandler $dataHandler): void
+    {
         // Do nothing, if this request has no file relations
         if (!$this->requestHasRelationsToFiles($dataHandler)) {
             return;
         }
 
-        // Do nothing, if current $table is a FAL table
-        if (!$this->isAllowedTable($table)) {
-            return;
-        }
-
-        foreach ($this->tcaHelper->getColumnsWithFileReferences($table) as $column) {
-            $sysFileReferenceRecords = $this->getSysFileReferenceRecordsForColumn(
-                $column,
-                (string)$id,
-                $table,
-                $dataHandler
-            );
-            if ($sysFileReferenceRecords === []) {
+        foreach ($dataHandler->datamap as $table => $records) {
+            if ($this->isDisallowedTable($table)) {
                 continue;
             }
 
-            foreach ($sysFileReferenceRecords as $sysFileReferenceRecord) {
-                $sysFileReferenceRecord = $this->updateCropVariantsService->synchronizeCropVariants(
-                    $sysFileReferenceRecord
-                );
-                $dataHandler->datamap['sys_file_reference'][$sysFileReferenceRecord['uid']]['crop']
-                    = $sysFileReferenceRecord['crop'];
+            foreach ($this->tcaHelper->getColumnsWithFileReferences($table) as $column) {
+                foreach ($records as $uid => $record) {
+                    $sysFileReferenceRecords = $this->getSysFileReferenceRecordsForColumn(
+                        $column,
+                        (string)$uid,
+                        $table,
+                        $dataHandler
+                    );
+                    if ($sysFileReferenceRecords === []) {
+                        continue;
+                    }
+
+                    foreach ($sysFileReferenceRecords as $sysFileReferenceRecord) {
+                        try {
+                            $updatedSysFileReferenceRecord = $this->updateCropVariantsService->synchronizeCropVariants(
+                                $sysFileReferenceRecord
+                            );
+                        } catch (InvalidConfigurationException $invalidConfigurationException) {
+                            continue;
+                        }
+
+                        if ($updatedSysFileReferenceRecord === []) {
+                            continue;
+                        }
+
+                        if ($sysFileReferenceRecord !== $updatedSysFileReferenceRecord) {
+                            $this->updateSysFileReferenceRecord($updatedSysFileReferenceRecord);
+                        }
+                    }
+                }
             }
         }
     }
@@ -88,15 +95,10 @@ class DataHandlerHook
         return array_key_exists('sys_file_reference', $dataHandler->datamap);
     }
 
-    protected function getCurrentFullRecord(DataHandler $dataHandler): array
-    {
-        return $dataHandler->checkValue_currentRecord;
-    }
-
     /**
      * We need records which have a relation to FAL (tt_content, pages, tx_*) and not FAL internal.
      */
-    protected function isAllowedTable(string $table): bool
+    protected function isDisallowedTable(string $table): bool
     {
         $disallowedTables = [
             'sys_file',
@@ -108,7 +110,7 @@ class DataHandlerHook
             'sys_file_storage',
         ];
 
-        return !in_array($table, $disallowedTables, true);
+        return in_array($table, $disallowedTables, true);
     }
 
     protected function getSysFileReferenceRecordsForColumn(
@@ -118,7 +120,7 @@ class DataHandlerHook
         DataHandler $dataHandler
     ): array {
         try {
-            $uidValues = (string)ArrayUtility::getValueByPath(
+            $csvListOfIdentifiers = (string)ArrayUtility::getValueByPath(
                 $dataHandler->datamap,
                 sprintf(
                     '%s/%s/%s',
@@ -138,53 +140,54 @@ class DataHandlerHook
             return [];
         }
 
+        $sysFileReferenceIdentifiers = array_map(static function ($uid) use ($dataHandler) {
+            return array_key_exists($uid, $dataHandler->substNEWwithIDs)
+                ? (int)$dataHandler->substNEWwithIDs[$uid]
+                : (int)$uid;
+        }, GeneralUtility::trimExplode(',', $csvListOfIdentifiers));
+
         $sysFileReferenceRecords = [];
-        foreach (GeneralUtility::trimExplode(',', $uidValues) as $sysFileReferenceUid) {
-            $sysFileReferenceRecordFromDatabase = [];
-            if (MathUtility::canBeInterpretedAsInteger($sysFileReferenceUid)) {
-                $sysFileReferenceRecordFromDatabase = $this->getSysFileReferenceRecordByUid((int)$sysFileReferenceUid);
-            }
+        foreach ($sysFileReferenceIdentifiers as $sysFileReferenceIdentifier) {
+            $sysFileReferenceRecord = BackendUtility::getRecord('sys_file_reference', $sysFileReferenceIdentifier);
 
-            try {
-                $sysFileReferenceRecordFromRequest = ArrayUtility::getValueByPath(
-                    $dataHandler->datamap,
-                    sprintf(
-                        'sys_file_reference/%s',
-                        $sysFileReferenceUid
-                    )
-                );
-            } catch (MissingArrayPathException $missingArrayPathException) {
-                // Segment of path could not be found in array
-                continue;
-            } catch (\RuntimeException $runtimeException) {
-                // $path is empty
-                continue;
-            } catch (\InvalidArgumentException $invalidArgumentException) {
-                // $path is not string or array
+            if ($sysFileReferenceRecord === []) {
                 continue;
             }
 
-            ArrayUtility::mergeRecursiveWithOverrule(
-                $sysFileReferenceRecordFromDatabase,
-                $sysFileReferenceRecordFromRequest
-            );
-
-            if (empty($sysFileReferenceRecordFromDatabase['crop'])) {
+            if ($sysFileReferenceRecord === null) {
                 continue;
             }
 
-            if (empty($sysFileReferenceRecordFromDatabase['sync_crop_area'])) {
+            if (empty($sysFileReferenceRecord['crop'])) {
                 continue;
             }
 
-            $sysFileReferenceRecords[$sysFileReferenceUid] = $sysFileReferenceRecordFromDatabase;
+            if (empty($sysFileReferenceRecord['sync_crop_area'])) {
+                continue;
+            }
+
+            $sysFileReferenceRecords[(int)$sysFileReferenceRecord['uid']] = $sysFileReferenceRecord;
         }
 
         return $sysFileReferenceRecords;
     }
 
-    protected function getSysFileReferenceRecordByUid(int $sysFileReferenceUid): array
+    protected function updateSysFileReferenceRecord(array $sysFileReferenceRecord): void
     {
-        return BackendUtility::getRecord('sys_file_reference', $sysFileReferenceUid) ?: [];
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->update(
+            'sys_file_reference',
+            [
+                'crop' => $sysFileReferenceRecord['crop']
+            ],
+            [
+                'uid' => $sysFileReferenceRecord['uid']
+            ]
+        );
+    }
+
+    protected function getConnectionPool(): ConnectionPool
+    {
+        return GeneralUtility::makeInstance(ConnectionPool::class);
     }
 }
