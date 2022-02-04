@@ -7,6 +7,11 @@
 ChangeLog
 =========
 
+**Version 2.2.1**
+
+- Bugfix: Repair sync for new sys_file_reference records
+- TASK: Update and add more functional tests
+
 **Version 2.2.0**
 
 - Feature: Respect TCA overrideChildTca
