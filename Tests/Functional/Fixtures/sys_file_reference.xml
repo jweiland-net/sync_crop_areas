@@ -15,6 +15,7 @@
 		<fieldname>image</fieldname>
 		<table_local>sys_file</table_local>
 		<title>Mixed CropVariants</title>
+		<sync_crop_area>1</sync_crop_area>
 		<crop>{"desktop":{"cropArea":{"x":0.017092203898050978,"y":0.029985007496251874,"width":0.36881559220389803,"height":0.36881559220389803},"selectedRatio":"3:2","focusArea":null},"mobile":{"cropArea":{"x":0.017000000000000001,"y":0.058720928598200876,"width":0.36899999999999999,"height":0.31134375000000003},"selectedRatio":"16:9","focusArea":null},"tablet":{"cropArea":{"x":0.017092203898050978,"y":0.029985007496251874,"width":0.36881559220389803,"height":0.36881559220389803},"selectedRatio":"3:2","focusArea":null},"smartphone":{"cropArea":{"x":0.017092203898050978,"y":0.029985007496251874,"width":0.36881559220389803,"height":0.36881559220389803},"selectedRatio":"3:2","focusArea":null}}</crop>
 	</sys_file_reference>
 	<sys_file_reference>
@@ -32,6 +33,7 @@
 		<fieldname>image</fieldname>
 		<table_local>sys_file</table_local>
 		<title>Empty CropVariants</title>
+		<sync_crop_area>1</sync_crop_area>
 		<crop>{}</crop>
 	</sys_file_reference>
 	<sys_file_reference>
@@ -49,6 +51,7 @@
 		<fieldname>image</fieldname>
 		<table_local>sys_file</table_local>
 		<title>Crop with missing CropVariants</title>
+		<sync_crop_area>1</sync_crop_area>
 		<crop>{"desktop":{"cropArea":{"height":0.36881559220389803,"width":0.36899999999999999,"x":0.017000000000000001,"y":0.029985007496251874},"selectedRatio":"3:2","focusArea":null}}</crop>
 	</sys_file_reference>
 </dataset>

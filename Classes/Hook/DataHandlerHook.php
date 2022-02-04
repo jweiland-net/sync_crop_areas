@@ -20,7 +20,6 @@ use TYPO3\CMS\Core\Imaging\ImageManipulation\InvalidConfigurationException;
 use TYPO3\CMS\Core\Utility\ArrayUtility;
 use TYPO3\CMS\Core\Utility\Exception\MissingArrayPathException;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
-use TYPO3\CMS\Core\Utility\MathUtility;
 
 /**
  * Copy first found CropArea to all other CropVariants as long as selectedRatio matches
@@ -45,9 +44,8 @@ class DataHandlerHook
         }
 
         foreach ($dataHandler->datamap as $table => $records) {
-            // Do nothing, if current $table is a FAL table
-            if (!$this->isAllowedTable($table)) {
-                return;
+            if ($this->isDisallowedTable($table)) {
+                continue;
             }
 
             foreach ($this->tcaHelper->getColumnsWithFileReferences($table) as $column) {
@@ -92,7 +90,7 @@ class DataHandlerHook
     /**
      * We need records which have a relation to FAL (tt_content, pages, tx_*) and not FAL internal.
      */
-    protected function isAllowedTable(string $table): bool
+    protected function isDisallowedTable(string $table): bool
     {
         $disallowedTables = [
             'sys_file',
@@ -104,7 +102,7 @@ class DataHandlerHook
             'sys_file_storage',
         ];
 
-        return !in_array($table, $disallowedTables, true);
+        return in_array($table, $disallowedTables, true);
     }
 
     protected function getSysFileReferenceRecordsForColumn(
