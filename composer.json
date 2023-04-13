@@ -18,11 +18,11 @@
 	"require": {
 		"php": "^7.4 || ^8.0",
 		"ext-json": "*",
-		"typo3/cms-core": "^10.4.19 || ^11.5.0"
+		"typo3/cms-core": "^11.5.23 || ^12.3.0"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
-		"friendsofphp/php-cs-fixer": "^3.0",
+		"friendsofphp/php-cs-fixer": "^3.14",
 		"nimut/testing-framework": "^6.0",
 		"phpspec/prophecy-phpunit": "^2.0"
 	},
