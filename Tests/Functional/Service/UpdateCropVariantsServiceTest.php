@@ -32,7 +32,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
      * @var array
      */
     protected $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas'
+        'typo3conf/ext/sync_crop_areas',
     ];
 
     protected UpdateCropVariantsService $subject;
@@ -43,20 +43,20 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                 'x' => 0,
                 'y' => 0,
                 'width' => 1,
-                'height' => 1
+                'height' => 1,
             ],
             'selectedRatio' => '4:3',
-            'focusArea' => null
+            'focusArea' => null,
         ],
         'mobile' => [
             'cropArea' => [
                 'x' => 0.3,
                 'y' => 0.1,
                 'width' => 0.9,
-                'height' => 0.85
+                'height' => 0.85,
             ],
             'selectedRatio' => '16:9',
-            'focusArea' => null
+            'focusArea' => null,
         ],
     ];
 
@@ -91,11 +91,11 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                 'allowedAspectRatios' => [
                     '4:3' => [
                         'title' => '4 zu 3',
-                        'value' => 4 / 3
+                        'value' => 4 / 3,
                     ],
                     'NaN' => [
                         'title' => 'Free',
-                        'value' => 0.0
+                        'value' => 0.0,
                     ],
                 ],
             ],
@@ -104,11 +104,11 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                 'allowedAspectRatios' => [
                     '16:9' => [
                         'title' => '16 zu 9',
-                        'value' => 16 / 9
+                        'value' => 16 / 9,
                     ],
                     'NaN' => [
                         'title' => 'Free',
-                        'value' => 0.0
+                        'value' => 0.0,
                     ],
                 ],
             ],
@@ -141,17 +141,17 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                         'allowedAspectRatios.' => [
                                             'NaN.' => [
                                                 'title' => 'free',
-                                                'value' => 0.0
+                                                'value' => 0.0,
                                             ],
                                             '4:3.' => [
                                                 'title' => '4to3',
-                                                'value' => 1.3333333333
+                                                'value' => 1.3333333333,
                                             ],
                                             '16:9.' => [
                                                 'title' => '16to9',
-                                                'value' => 1.7777777778
+                                                'value' => 1.7777777778,
                                             ],
-                                        ]
+                                        ],
                                     ],
                                     'tablet.' => [
                                         'title' => 'tablet',
@@ -159,17 +159,17 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                         'allowedAspectRatios.' => [
                                             'NaN.' => [
                                                 'title' => 'free',
-                                                'value' => 0.0
+                                                'value' => 0.0,
                                             ],
                                             '4:3.' => [
                                                 'title' => '4to3',
-                                                'value' => 1.3333333333
+                                                'value' => 1.3333333333,
                                             ],
                                             '16:9.' => [
                                                 'title' => '16to9',
-                                                'value' => 1.7777777778
+                                                'value' => 1.7777777778,
                                             ],
-                                        ]
+                                        ],
                                     ],
                                     'smartphone.' => [
                                         'title' => 'smartphone',
@@ -177,23 +177,23 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                         'allowedAspectRatios.' => [
                                             'NaN.' => [
                                                 'title' => 'free',
-                                                'value' => 0.0
+                                                'value' => 0.0,
                                             ],
                                             '4:3.' => [
                                                 'title' => '4to3',
-                                                'value' => 1.3333333333
+                                                'value' => 1.3333333333,
                                             ],
                                             '16:9.' => [
                                                 'title' => '16to9',
-                                                'value' => 1.7777777778
+                                                'value' => 1.7777777778,
                                             ],
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
             ]);
 
         /** @var CacheManager|ObjectProphecy $cacheManagerProphecy */
@@ -213,7 +213,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $sysFileReference = [
             'uid' => 1,
             'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
-            'sync_crop_area' => 0
+            'sync_crop_area' => 0,
         ];
 
         self::assertSame(

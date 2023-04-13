@@ -33,7 +33,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      * @var array
      */
     protected $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas'
+        'typo3conf/ext/sync_crop_areas',
     ];
 
     protected SynchronizeCropVariantsCommand $subject;

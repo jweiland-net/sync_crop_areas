@@ -31,7 +31,7 @@ class DataHandlerHookTest extends FunctionalTestCase
      * @var array
      */
     protected $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas'
+        'typo3conf/ext/sync_crop_areas',
     ];
 
     protected DataHandlerHook $subject;
@@ -106,9 +106,9 @@ class DataHandlerHookTest extends FunctionalTestCase
         $dataHandler->datamap = [
             'tt_content' => [
                 1 => [
-                    'pid' => 12
-                ]
-            ]
+                    'pid' => 12,
+                ],
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
@@ -146,9 +146,9 @@ class DataHandlerHookTest extends FunctionalTestCase
         $dataHandler->datamap = [
             $invalidTable => [
                 1 => [
-                    'pid' => 12
-                ]
-            ]
+                    'pid' => 12,
+                ],
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
@@ -195,16 +195,16 @@ class DataHandlerHookTest extends FunctionalTestCase
                 ],
                 3 => [
                     'hidden' => 0,
-                ]
+                ],
             ],
             'tt_content' => [
                 1 => [
-                    'image' => '1'
+                    'image' => '1',
                 ],
                 2 => [
-                    'image' => '2,3'
+                    'image' => '2,3',
                 ],
-            ]
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
