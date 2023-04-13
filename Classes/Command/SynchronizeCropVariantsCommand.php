@@ -112,10 +112,10 @@ class SynchronizeCropVariantsCommand extends Command
                 $connection->update(
                     'sys_file_reference',
                     [
-                        'crop' => $updatedSysFileReferenceRecord['crop']
+                        'crop' => $updatedSysFileReferenceRecord['crop'],
                     ],
                     [
-                        'uid' => (int)$sysFileReferenceRecord['uid']
+                        'uid' => (int)$sysFileReferenceRecord['uid'],
                     ]
                 );
                 $processed++;
