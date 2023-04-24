@@ -14,8 +14,7 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Service;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -26,8 +25,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class UpdateCropVariantsServiceTest extends FunctionalTestCase
 {
-    use ProphecyTrait;
-
     /**
      * @var array
      */
@@ -122,87 +119,96 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
 
     protected function activatePageTsConfigCropVariants(): void
     {
-        /** @var FrontendInterface|ObjectProphecy $runtimeCacheProphecy */
-        $runtimeCacheProphecy = $this->prophesize(VariableFrontend::class);
-        $runtimeCacheProphecy
-            ->get('pagesTsConfigIdToHash1')
-            ->willReturn('Id2Hash');
-        $runtimeCacheProphecy
-            ->get('pagesTsConfigHashToContentId2Hash')
-            ->willReturn([
-                'TCEFORM.' => [
-                    'sys_file_reference.' => [
-                        'crop.' => [
-                            'config.' => [
-                                'cropVariants.' => [
-                                    'desktop.' => [
-                                        'title' => 'default',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
+        /** @var FrontendInterface|MockObject $runtimeCacheMock */
+        $runtimeCacheMock = $this->createMock(VariableFrontend::class);
+        $runtimeCacheMock
+            ->expects(self::atLeastOnce())
+            ->method('get')
+            ->willReturnMap([
+                [
+                    'pagesTsConfigIdToHash1',
+                    'Id2Hash'
+                ],
+                [
+                    'pagesTsConfigHashToContentId2Hash',
+                    [
+                        'TCEFORM.' => [
+                            'sys_file_reference.' => [
+                                'crop.' => [
+                                    'config.' => [
+                                        'cropVariants.' => [
+                                            'desktop.' => [
+                                                'title' => 'default',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
                                             ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
+                                            'tablet.' => [
+                                                'title' => 'tablet',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
                                             ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
-                                        ]
-                                    ],
-                                    'tablet.' => [
-                                        'title' => 'tablet',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
-                                            ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
-                                            ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
-                                        ]
-                                    ],
-                                    'smartphone.' => [
-                                        'title' => 'smartphone',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
-                                            ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
-                                            ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
+                                            'smartphone.' => [
+                                                'title' => 'smartphone',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
+                                            ]
                                         ]
                                     ]
                                 ]
                             ]
                         ]
                     ]
-                ]
+                ],
             ]);
 
-        /** @var CacheManager|ObjectProphecy $cacheManagerProphecy */
-        $cacheManagerProphecy = $this->prophesize(CacheManager::class);
-        $cacheManagerProphecy
-            ->getCache('runtime')
-            ->willReturn($runtimeCacheProphecy);
+        /** @var CacheManager|MockObject $cacheManagerMock */
+        $cacheManagerMock = $this->createMock(CacheManager::class);
+        $cacheManagerMock
+            ->expects(self::atLeastOnce())
+            ->method('getCache')
+            ->with(self::identicalTo('runtime'))
+            ->willReturn($runtimeCacheMock);
 
-        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManagerProphecy->reveal());
+        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManagerMock);
     }
 
     /**
