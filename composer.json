@@ -4,7 +4,7 @@
 	"description": "Sync first found crop area to all other CropVariants",
 	"license": "GPL-2.0-or-later",
 	"keywords": ["typo3", "TYPO3 CMS", "jweiland.net", "sync", "synchronize", "crop", "area", "variants"],
-	"homepage": "http://www.jweiland.net",
+	"homepage": "https://jweiland.net",
 	"authors": [
 		{
 			"name": "Stefan Froemken",
@@ -18,13 +18,12 @@
 	"require": {
 		"php": "^7.4 || ^8.0",
 		"ext-json": "*",
-		"typo3/cms-core": "^10.4.19 || ^11.5.0"
+		"typo3/cms-core": "^10.4.36 || ^11.5.23"
 	},
 	"require-dev": {
 		"roave/security-advisories": "dev-latest",
-		"friendsofphp/php-cs-fixer": "^3.0",
-		"nimut/testing-framework": "^6.0",
-		"phpspec/prophecy-phpunit": "^2.0"
+		"friendsofphp/php-cs-fixer": "^3.14",
+		"nimut/testing-framework": "^6.0"
 	},
 	"autoload": {
 		"psr-4": {
