@@ -14,8 +14,7 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Service;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\Cache\CacheManager;
 use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
 use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
@@ -26,8 +25,6 @@ use TYPO3\CMS\Core\Utility\GeneralUtility;
  */
 class UpdateCropVariantsServiceTest extends FunctionalTestCase
 {
-    use ProphecyTrait;
-
     /**
      * @var array
      */
@@ -67,7 +64,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
 
-        $this->activateTcaCropVariants();
+        $this->activateTcaCropVariantsForSysFileReference();
 
         $this->subject = new UpdateCropVariantsService(
             new TcaHelper()
@@ -83,7 +80,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         parent::tearDown();
     }
 
-    protected function activateTcaCropVariants(): void
+    protected function activateTcaCropVariantsForSysFileReference(): void
     {
         $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants'] = [
             'desktop' => [
@@ -115,78 +112,48 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         ];
     }
 
-    protected function disableTcaCropVariants(): void
+    protected function activateTcaCropVariantsForTtContentWithoutTypes(): void
     {
-        unset($GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']);
-    }
-
-    protected function activatePageTsConfigCropVariants(): void
-    {
-        /** @var FrontendInterface|ObjectProphecy $runtimeCacheProphecy */
-        $runtimeCacheProphecy = $this->prophesize(VariableFrontend::class);
-        $runtimeCacheProphecy
-            ->get('pagesTsConfigIdToHash1')
-            ->willReturn('Id2Hash');
-        $runtimeCacheProphecy
-            ->get('pagesTsConfigHashToContentId2Hash')
-            ->willReturn([
-                'TCEFORM.' => [
-                    'sys_file_reference.' => [
-                        'crop.' => [
-                            'config.' => [
-                                'cropVariants.' => [
-                                    'desktop.' => [
-                                        'title' => 'default',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
-                                            ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
-                                            ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
-                                        ]
-                                    ],
-                                    'tablet.' => [
-                                        'title' => 'tablet',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
-                                            ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
-                                            ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
-                                        ]
-                                    ],
-                                    'smartphone.' => [
-                                        'title' => 'smartphone',
-                                        'selectedRatio' => 'NaN',
-                                        'allowedAspectRatios.' => [
-                                            'NaN.' => [
-                                                'title' => 'free',
-                                                'value' => 0.0
-                                            ],
-                                            '4:3.' => [
-                                                'title' => '4to3',
-                                                'value' => 1.3333333333
-                                            ],
-                                            '16:9.' => [
-                                                'title' => '16to9',
-                                                'value' => 1.7777777778
-                                            ],
+        // Convert tt_content to a single type table
+        unset($GLOBALS['TCA']['tt_content']['ctrl']['type']);
+        unset($GLOBALS['TCA']['tt_content']['types']);
+        $GLOBALS['TCA']['tt_content']['types'] = [
+            '1' => [
+                'columnsOverrides' => [
+                    'image' => [
+                        'config' => [
+                            'overrideChildTca' => [
+                                'columns' => [
+                                    'crop' => [
+                                        'config' => [
+                                            'cropVariants' => [
+                                                'desktop' => [
+                                                    'title' => 'Desktop',
+                                                    'allowedAspectRatios' => [
+                                                        '4:3' => [
+                                                            'title' => '4 zu 3',
+                                                            'value' => 4 / 3
+                                                        ],
+                                                        'NaN' => [
+                                                            'title' => 'Free',
+                                                            'value' => 0.0
+                                                        ],
+                                                    ],
+                                                ],
+                                                'mobile' => [
+                                                    'title' => 'Mobile',
+                                                    'allowedAspectRatios' => [
+                                                        '4:3' => [
+                                                            'title' => '4 zu 3',
+                                                            'value' => 4 / 3
+                                                        ],
+                                                        'NaN' => [
+                                                            'title' => 'Free',
+                                                            'value' => 0.0
+                                                        ],
+                                                    ],
+                                                ],
+                                            ]
                                         ]
                                     ]
                                 ]
@@ -194,15 +161,107 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                         ]
                     ]
                 ]
+            ]
+        ];
+    }
+
+    protected function disableTcaCropVariants(): void
+    {
+        unset($GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']);
+    }
+
+    protected function activatePageTsConfigCropVariants(): void
+    {
+        /** @var FrontendInterface|MockObject $runtimeCacheMock */
+        $runtimeCacheMock = $this->createMock(VariableFrontend::class);
+        $runtimeCacheMock
+            ->expects(self::atLeastOnce())
+            ->method('get')
+            ->willReturnMap([
+                [
+                    'pagesTsConfigIdToHash1',
+                    'Id2Hash'
+                ],
+                [
+                    'pagesTsConfigHashToContentId2Hash',
+                    [
+                        'TCEFORM.' => [
+                            'sys_file_reference.' => [
+                                'crop.' => [
+                                    'config.' => [
+                                        'cropVariants.' => [
+                                            'desktop.' => [
+                                                'title' => 'default',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
+                                            ],
+                                            'tablet.' => [
+                                                'title' => 'tablet',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
+                                            ],
+                                            'smartphone.' => [
+                                                'title' => 'smartphone',
+                                                'selectedRatio' => 'NaN',
+                                                'allowedAspectRatios.' => [
+                                                    'NaN.' => [
+                                                        'title' => 'free',
+                                                        'value' => 0.0
+                                                    ],
+                                                    '4:3.' => [
+                                                        'title' => '4to3',
+                                                        'value' => 1.3333333333
+                                                    ],
+                                                    '16:9.' => [
+                                                        'title' => '16to9',
+                                                        'value' => 1.7777777778
+                                                    ],
+                                                ]
+                                            ]
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        ]
+                    ]
+                ],
             ]);
 
-        /** @var CacheManager|ObjectProphecy $cacheManagerProphecy */
-        $cacheManagerProphecy = $this->prophesize(CacheManager::class);
-        $cacheManagerProphecy
-            ->getCache('runtime')
-            ->willReturn($runtimeCacheProphecy);
+        /** @var CacheManager|MockObject $cacheManagerMock */
+        $cacheManagerMock = $this->createMock(CacheManager::class);
+        $cacheManagerMock
+            ->expects(self::atLeastOnce())
+            ->method('getCache')
+            ->with(self::identicalTo('runtime'))
+            ->willReturn($runtimeCacheMock);
 
-        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManagerProphecy->reveal());
+        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManagerMock);
     }
 
     /**
@@ -263,7 +322,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
      */
     public function synchronizeCropVariantsWithOneCropVariantWillNotChangeFieldArray(): void
     {
-        $this->activateTcaCropVariants();
+        $this->activateTcaCropVariantsForSysFileReference();
 
         // Now we have just ONE CropVariant configuration
         unset($GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']['mobile']);
@@ -288,7 +347,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
      */
     public function synchronizeCropVariantsWithNonMatchingSelectedRatiosWillNotChangeFieldArray(): void
     {
-        $this->activateTcaCropVariants();
+        $this->activateTcaCropVariantsForSysFileReference();
 
         $sysFileReference = [
             'sync_crop_area' => 1,
@@ -313,7 +372,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $crop = $this->crop;
         $crop['desktop']['selectedRatio'] = 'NaN';
 
-        $this->activateTcaCropVariants();
+        $this->activateTcaCropVariantsForSysFileReference();
 
         $sysFileReference = [
             'sync_crop_area' => 1,
@@ -374,7 +433,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
      */
     public function synchronizeCropVariantsWillChangeFieldArrayForMergedCropVariants(): void
     {
-        $this->activateTcaCropVariants();
+        $this->activateTcaCropVariantsForSysFileReference();
         $this->activatePageTsConfigCropVariants();
 
         // Crop contains just two CropVariants.
@@ -392,6 +451,36 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         $crop['tablet'] = $crop['desktop'];
         $crop['smartphone'] = $crop['desktop'];
 
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
+
+        self::assertSame(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function synchronizeCropVariantsWithoutCtrlRecordTypesWillChangeFieldArray(): void
+    {
+        $this->activateTcaCropVariantsForTtContentWithoutTypes();
+
+        // Crop contains just two CropVariants.
+        // This test also checks, if the two new CropVariants were also added
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($this->crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
+        ];
+
+        $crop = $this->crop;
+
+        $crop['mobile'] = $crop['desktop'];
         $expectedSysFileReference = $sysFileReference;
         $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 

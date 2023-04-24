@@ -7,6 +7,11 @@
 ChangeLog
 =========
 
+**Version 2.2.2**
+
+- Bugfix: Respect crop variants of non-types tables in columnsOverride
+- Task: Migrate Prophesize in tests to MockObjects
+
 **Version 2.2.1**
 
 - Bugfix: Repair sync for new sys_file_reference records

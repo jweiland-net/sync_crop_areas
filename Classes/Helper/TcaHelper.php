@@ -139,7 +139,7 @@ class TcaHelper
 
         // It also checks, if key "type" is not empty
         if (!$this->tableHasTypeConfiguration($tableConfiguration)) {
-            return '';
+            return is_array($tableConfiguration['types'] ?? null) ? (string)key($tableConfiguration['types']) : '';
         }
 
         $typeColumn = $tableConfiguration['ctrl']['type'];
@@ -222,10 +222,6 @@ class TcaHelper
         array &$columnBaseConfiguration
     ): void {
         if ($type === '') {
-            return;
-        }
-
-        if (!$this->tableHasTypeConfiguration($tableConfiguration)) {
             return;
         }
 

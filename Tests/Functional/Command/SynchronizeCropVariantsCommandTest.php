@@ -14,9 +14,7 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Command;
 use JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
-use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -27,8 +25,6 @@ use Symfony\Component\Console\Output\OutputInterface;
  */
 class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
 {
-    use ProphecyTrait;
-
     /**
      * @var array
      */
@@ -39,33 +35,30 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
     protected SynchronizeCropVariantsCommand $subject;
 
     /**
-     * @var UpdateCropVariantsService|ObjectProphecy
+     * @var UpdateCropVariantsService|MockObject
      */
-    protected $updateCropVariantsServiceProphecy;
+    protected $updateCropVariantsServiceMock;
 
     /**
-     * @var InputInterface|ObjectProphecy
+     * @var InputInterface|MockObject
      */
-    protected $inputProphecy;
+    protected $inputMock;
 
     /**
-     * @var OutputInterface|ObjectProphecy
+     * @var OutputInterface|MockObject
      */
-    protected $outputProphecy;
+    protected $outputMock;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->updateCropVariantsServiceProphecy = $this->prophesize(UpdateCropVariantsService::class);
-        $this->inputProphecy = $this->prophesize(StringInput::class);
-        $this->outputProphecy = $this->prophesize(ConsoleOutput::class);
-        $this->outputProphecy
-            ->writeln('Start synchronizing crop variants of table sys_file_reference')
-            ->shouldBeCalled();
+        $this->updateCropVariantsServiceMock = $this->createMock(UpdateCropVariantsService::class);
+        $this->inputMock = $this->createMock(StringInput::class);
+        $this->outputMock = $this->createMock(ConsoleOutput::class);
 
         $this->subject = new SynchronizeCropVariantsCommand(
-            $this->updateCropVariantsServiceProphecy->reveal(),
+            $this->updateCropVariantsServiceMock,
             \JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand::class
         );
     }
@@ -74,7 +67,9 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
     {
         unset(
             $this->subject,
-            $this->updateCropVariantsServiceProphecy
+            $this->outputMock,
+            $this->inputMock,
+            $this->updateCropVariantsServiceMock
         );
 
         parent::tearDown();
@@ -85,13 +80,17 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithNoSysFileReferencesDisplaysEmptyStatistic(): void
     {
-        $this->outputProphecy
-            ->writeln('We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values')
-            ->shouldBeCalled();
+        $this->outputMock
+            ->expects(self::exactly(2))
+            ->method('writeln')
+            ->willReturnOnConsecutiveCalls([
+                ['Start synchronizing crop variants of table sys_file_reference', null],
+                ['We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values', null]
+            ]);
 
         $this->subject->run(
-            $this->inputProphecy->reveal(),
-            $this->outputProphecy->reveal()
+            $this->inputMock,
+            $this->outputMock
         );
     }
 
@@ -116,16 +115,18 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ]
         );
 
-        $this->outputProphecy
-            ->writeln('SKIP: Column "crop" of sys_file_reference record with UID 1 is empty')
-            ->shouldBeCalled();
-        $this->outputProphecy
-            ->writeln('We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values')
-            ->shouldBeCalled();
+        $this->outputMock
+            ->expects(self::exactly(3))
+            ->method('writeln')
+            ->willReturnOnConsecutiveCalls([
+                ['Start synchronizing crop variants of table sys_file_reference', null],
+                ['SKIP: Column "crop" of sys_file_reference record with UID 1 is empty', null],
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+            ]);
 
         $this->subject->run(
-            $this->inputProphecy->reveal(),
-            $this->outputProphecy->reveal()
+            $this->inputMock,
+            $this->outputMock
         );
     }
 
@@ -150,16 +151,18 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ]
         );
 
-        $this->outputProphecy
-            ->writeln('SKIP: Column "pid" of sys_file_reference record with UID 1 is empty')
-            ->shouldBeCalled();
-        $this->outputProphecy
-            ->writeln('We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values')
-            ->shouldBeCalled();
+        $this->outputMock
+            ->expects(self::exactly(3))
+            ->method('writeln')
+            ->willReturnOnConsecutiveCalls([
+                ['Start synchronizing crop variants of table sys_file_reference', null],
+                ['SKIP: Column "pid" of sys_file_reference record with UID 1 is empty', null],
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+            ]);
 
         $this->subject->run(
-            $this->inputProphecy->reveal(),
-            $this->outputProphecy->reveal()
+            $this->inputMock,
+            $this->outputMock
         );
     }
 
@@ -183,21 +186,23 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
 
         $this->getDatabaseConnection()->insertArray('sys_file_reference', $sysFileReferenceRecord);
 
-        $this->outputProphecy
-            ->writeln('SKIP: Column "crop" of table "sys_file_reference" with UID 1 because it is unchanged, empty or invalid JSON')
-            ->shouldBeCalled();
-        $this->outputProphecy
-            ->writeln('We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values')
-            ->shouldBeCalled();
+        $this->outputMock
+            ->expects(self::exactly(3))
+            ->method('writeln')
+            ->willReturnOnConsecutiveCalls([
+                ['Start synchronizing crop variants of table sys_file_reference', null],
+                ['SKIP: Column "crop" of table "sys_file_reference" with UID 1 because it is unchanged, empty or invalid JSON', null],
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+            ]);
 
-        $this->updateCropVariantsServiceProphecy
-            ->synchronizeCropVariants(Argument::cetera())
-            ->shouldBeCalled()
+        $this->updateCropVariantsServiceMock
+            ->expects(self::atLeastOnce())
+            ->method('synchronizeCropVariants')
             ->willReturn($sysFileReferenceRecord);
 
         $this->subject->run(
-            $this->inputProphecy->reveal(),
-            $this->outputProphecy->reveal()
+            $this->inputMock,
+            $this->outputMock
         );
     }
 
@@ -209,18 +214,22 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
 
-        $this->outputProphecy
-            ->writeln('We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values')
-            ->shouldBeCalled();
+        $this->outputMock
+            ->expects(self::exactly(2))
+            ->method('writeln')
+            ->willReturnOnConsecutiveCalls([
+                ['Start synchronizing crop variants of table sys_file_reference', null],
+                ['We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values', null]
+            ]);
 
-        $this->updateCropVariantsServiceProphecy
-            ->synchronizeCropVariants(Argument::cetera())
-            ->shouldBeCalled()
+        $this->updateCropVariantsServiceMock
+            ->expects(self::atLeastOnce())
+            ->method('synchronizeCropVariants')
             ->willReturn(['crop' => '{foo: "bar"}']);
 
         $this->subject->run(
-            $this->inputProphecy->reveal(),
-            $this->outputProphecy->reveal()
+            $this->inputMock,
+            $this->outputMock
         );
 
         $statement = $this->getDatabaseConnection()->select('*', 'sys_file_reference', '1=1');

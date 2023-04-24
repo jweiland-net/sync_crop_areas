@@ -15,9 +15,7 @@ use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Nimut\TestingFramework\TestCase\FunctionalTestCase;
-use Prophecy\Argument;
-use Prophecy\PhpUnit\ProphecyTrait;
-use Prophecy\Prophecy\ObjectProphecy;
+use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 
 /**
@@ -25,8 +23,6 @@ use TYPO3\CMS\Core\DataHandling\DataHandler;
  */
 class DataHandlerHookTest extends FunctionalTestCase
 {
-    use ProphecyTrait;
-
     /**
      * @var array
      */
@@ -37,25 +33,25 @@ class DataHandlerHookTest extends FunctionalTestCase
     protected DataHandlerHook $subject;
 
     /**
-     * @var UpdateCropVariantsService|ObjectProphecy
+     * @var UpdateCropVariantsService|MockObject
      */
-    protected $updateCropVariantsServiceProphecy;
+    protected $updateCropVariantsServiceMock;
 
     /**
-     * @var TcaHelper|ObjectProphecy
+     * @var TcaHelper|MockObject
      */
-    protected $tcaHelperProphecy;
+    protected $tcaHelperMock;
 
     protected function setUp(): void
     {
         parent::setUp();
 
-        $this->updateCropVariantsServiceProphecy = $this->prophesize(UpdateCropVariantsService::class);
-        $this->tcaHelperProphecy = $this->prophesize(TcaHelper::class);
+        $this->updateCropVariantsServiceMock = $this->createMock(UpdateCropVariantsService::class);
+        $this->tcaHelperMock = $this->createMock(TcaHelper::class);
 
         $this->subject = new DataHandlerHook(
-            $this->updateCropVariantsServiceProphecy->reveal(),
-            $this->tcaHelperProphecy->reveal()
+            $this->updateCropVariantsServiceMock,
+            $this->tcaHelperMock
         );
     }
 
@@ -63,8 +59,8 @@ class DataHandlerHookTest extends FunctionalTestCase
     {
         unset(
             $this->subject,
-            $this->updateCropVariantsServiceProphecy,
-            $this->tcaHelperProphecy
+            $this->updateCropVariantsServiceMock,
+            $this->tcaHelperMock
         );
 
         parent::tearDown();
@@ -75,15 +71,15 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function hookWithEmptyDatamapWillNotProcessAnything(): void
     {
-        $this->tcaHelperProphecy
-            ->getColumnsWithFileReferences(Argument::cetera())
-            ->shouldNotBeCalled();
+        $this->tcaHelperMock
+            ->expects(self::never())
+            ->method('getColumnsWithFileReferences');
 
-        /** @var DataHandler|ObjectProphecy $dataHandlerProphecy */
-        $dataHandlerProphecy = $this->prophesize(DataHandler::class);
+        /** @var DataHandler|MockObject $dataHandlerMock */
+        $dataHandlerMock = $this->createMock(DataHandler::class);
 
         /** @var DataHandler $dataHandler */
-        $dataHandler = $dataHandlerProphecy->reveal();
+        $dataHandler = $dataHandlerMock;
         $dataHandler->datamap = [];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
@@ -94,15 +90,15 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function hookWithoutSysFileReferenceWillNotProcessAnything(): void
     {
-        $this->tcaHelperProphecy
-            ->getColumnsWithFileReferences(Argument::cetera())
-            ->shouldNotBeCalled();
+        $this->tcaHelperMock
+            ->expects(self::never())
+            ->method('getColumnsWithFileReferences');
 
-        /** @var DataHandler|ObjectProphecy $dataHandlerProphecy */
-        $dataHandlerProphecy = $this->prophesize(DataHandler::class);
+        /** @var DataHandler|MockObject $dataHandlerMock */
+        $dataHandlerMock = $this->createMock(DataHandler::class);
 
         /** @var DataHandler $dataHandler */
-        $dataHandler = $dataHandlerProphecy->reveal();
+        $dataHandler = $dataHandlerMock;
         $dataHandler->datamap = [
             'tt_content' => [
                 1 => [
@@ -134,15 +130,15 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function hookWithOnlyFileTablesWillNotProcessAnything(string $invalidTable): void
     {
-        $this->tcaHelperProphecy
-            ->getColumnsWithFileReferences(Argument::cetera())
-            ->shouldNotBeCalled();
+        $this->tcaHelperMock
+            ->expects(self::never())
+            ->method('getColumnsWithFileReferences');
 
-        /** @var DataHandler|ObjectProphecy $dataHandlerProphecy */
-        $dataHandlerProphecy = $this->prophesize(DataHandler::class);
+        /** @var DataHandler|MockObject $dataHandlerMock */
+        $dataHandlerMock = $this->createMock(DataHandler::class);
 
         /** @var DataHandler $dataHandler */
-        $dataHandler = $dataHandlerProphecy->reveal();
+        $dataHandler = $dataHandlerMock;
         $dataHandler->datamap = [
             $invalidTable => [
                 1 => [
@@ -162,29 +158,26 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
         $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
 
-        $this->tcaHelperProphecy
-            ->getColumnsWithFileReferences('tt_content')
-            ->shouldBeCalled()
+        $this->tcaHelperMock
+            ->expects(self::atLeastOnce())
+            ->method('getColumnsWithFileReferences')
+            ->with(self::identicalTo('tt_content'))
             ->willReturn(['image']);
 
-        $this->updateCropVariantsServiceProphecy
-            ->synchronizeCropVariants(Argument::withEntry('uid', 1))
-            ->shouldBeCalled()
-            ->willReturn(['uid' => 1, 'crop' => '{foo: "bar"}']);
-        $this->updateCropVariantsServiceProphecy
-            ->synchronizeCropVariants(Argument::withEntry('uid', 2))
-            ->shouldBeCalled()
-            ->willReturn(['uid' => 2, 'crop' => '{foo: "bar"}']);
-        $this->updateCropVariantsServiceProphecy
-            ->synchronizeCropVariants(Argument::withEntry('uid', 3))
-            ->shouldBeCalled()
-            ->willReturn(['uid' => 3, 'crop' => '{foo: "bar"}']);
+        $this->updateCropVariantsServiceMock
+            ->expects(self::exactly(3))
+            ->method('synchronizeCropVariants')
+            ->willReturnCallback(static function (array $sysFileReferenceRecord) {
+                self::assertArrayHasKey('uid', $sysFileReferenceRecord);
+                $sysFileReferenceRecord['crop'] = '{foo: "bar"}';
+                return $sysFileReferenceRecord;
+            });
 
-        /** @var DataHandler|ObjectProphecy $dataHandlerProphecy */
-        $dataHandlerProphecy = $this->prophesize(DataHandler::class);
+        /** @var DataHandler|MockObject $dataHandlerMock */
+        $dataHandlerMock = $this->createMock(DataHandler::class);
 
         /** @var DataHandler $dataHandler */
-        $dataHandler = $dataHandlerProphecy->reveal();
+        $dataHandler = $dataHandlerMock;
         $dataHandler->datamap = [
             'sys_file_reference' => [
                 1 => [
