@@ -7,6 +7,12 @@
 ChangeLog
 =========
 
+**Version 2.2.3**
+
+- Task: Update .editorconfig
+- Task: Update .gitignore
+- Task: Update .gitattributes
+
 **Version 2.2.2**
 
 - Bugfix: Respect crop variants of non-types tables in columnsOverride
