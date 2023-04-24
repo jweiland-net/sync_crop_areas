@@ -3,7 +3,7 @@
 $EM_CONF[$_EXTKEY] = [
     'title' => 'Sync Crop Areas',
     'description' => 'Sync first found crop area to all other CropVariants',
-    'version' => '2.2.2',
+    'version' => '2.2.3',
     'category' => 'plugin',
     'state' => 'stable',
     'clearCacheOnLoad' => true,

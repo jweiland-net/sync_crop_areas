@@ -3,7 +3,16 @@
 	"type": "typo3-cms-extension",
 	"description": "Sync first found crop area to all other CropVariants",
 	"license": "GPL-2.0-or-later",
-	"keywords": ["typo3", "TYPO3 CMS", "jweiland.net", "sync", "synchronize", "crop", "area", "variants"],
+	"keywords": [
+		"typo3",
+		"TYPO3 CMS",
+		"jweiland.net",
+		"sync",
+		"synchronize",
+		"crop",
+		"area",
+		"variants"
+	],
 	"homepage": "https://jweiland.net",
 	"authors": [
 		{
