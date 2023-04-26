@@ -4,7 +4,6 @@
 		<uid>1</uid>
 		<pid>12</pid>
 		<tstamp>1551266318</tstamp>
-		<cruser_id>1</cruser_id>
 		<deleted>0</deleted>
 		<hidden>0</hidden>
 		<sys_language_uid>0</sys_language_uid>
@@ -22,7 +21,6 @@
 		<uid>2</uid>
 		<pid>12</pid>
 		<tstamp>1551266318</tstamp>
-		<cruser_id>1</cruser_id>
 		<deleted>0</deleted>
 		<hidden>0</hidden>
 		<sys_language_uid>0</sys_language_uid>
@@ -40,7 +38,6 @@
 		<uid>3</uid>
 		<pid>12</pid>
 		<tstamp>1551266318</tstamp>
-		<cruser_id>1</cruser_id>
 		<deleted>0</deleted>
 		<hidden>0</hidden>
 		<sys_language_uid>0</sys_language_uid>
