@@ -170,10 +170,10 @@ class DataHandlerHook
         $connection->update(
             'sys_file_reference',
             [
-                'crop' => $sysFileReferenceRecord['crop']
+                'crop' => $sysFileReferenceRecord['crop'],
             ],
             [
-                'uid' => $sysFileReferenceRecord['uid']
+                'uid' => $sysFileReferenceRecord['uid'],
             ]
         );
     }
