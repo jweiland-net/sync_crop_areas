@@ -3,7 +3,6 @@
 #
 # TYPO3 core test runner based on docker and docker-compose.
 #
-IMAGE_PREFIX="ghcr.io/typo3/"
 
 # Function to write a .env file in Build/testing-docker
 # This is read by docker-compose and vars defined here are
@@ -13,7 +12,7 @@ setUpDockerComposeDotEnv() {
     [ -e .env ] && rm .env
     # Set up a new .env file for docker-compose
     {
-        echo "COMPOSE_PROJECT_NAME=${PROJECT_NAME}"
+        echo "COMPOSE_PROJECT_NAME=local"
         # To prevent access rights of files created by the testing, the docker image later
         # runs with the same user that is currently executing the script. docker-compose can't
         # use $UID directly itself since it is a shell variable and not an env variable, so
@@ -86,6 +85,8 @@ Options:
             - composerInstallHighest: "composer update", handy if host has no PHP
             - functional: functional tests
             - lint: PHP linting
+            - phpstan: phpstan analyze
+            - phpstanGenerateBaseline: regenerate phpstan baseline, handy after phpstan updates
             - unit: PHP unit tests
 
     -a <mysqli|pdo_mysql>
@@ -154,7 +155,7 @@ Options:
         named "canRetrieveValueWithGP"
 
     -x
-        Only with -s functional|unit
+        Only with -s functional|unit|acceptance
         Send information to host instance for test or system under test break points. This is especially
         useful if a local PhpStorm instance is listening on default xdebug port 9003. A different port
         can be selected with -y
@@ -172,11 +173,10 @@ Options:
         Activate dry-run in CGL check that does not actively change files and only prints broken ones.
 
     -u
-        Update existing ${IMAGE_PREFIX}core-testing-*:latest docker images. Maintenance call to docker pull latest
+        Update existing typo3/core-testing-*:latest docker images. Maintenance call to docker pull latest
         versions of the main php images. The images are updated once in a while and only the youngest
         ones are supported by core testing. Use this if weird test errors occur. Also removes obsolete
-        image versions of ${IMAGE_PREFIX}core-testing-*.
-
+        image versions of typo3/core-testing-*.
     -v
         Enable verbose script output. Shows variables and docker commands.
 
@@ -328,7 +328,7 @@ DOCKER_PHP_IMAGE=`echo "php${PHP_VERSION}" | sed -e 's/\.//'`
 shift $((OPTIND - 1))
 TEST_FILE=${1}
 if [ -n "${1}" ]; then
-    TEST_FILE=".Build/public/typo3conf/ext/sync_crop_areas/${1}"
+    TEST_FILE="Web/typo3conf/ext/sync_crop_areas/${1}"
 fi
 
 if [ ${SCRIPT_VERBOSE} -eq 1 ]; then
@@ -428,11 +428,11 @@ case ${TEST_SUITE} in
                 SUITE_EXIT_CODE=$?
                 ;;
             sqlite)
-                # sqlite has a tmpfs as public/typo3temp/var/tests/functional-sqlite-dbs/
+                # sqlite has a tmpfs as Web/typo3temp/var/tests/functional-sqlite-dbs/
                 # Since docker is executed as root (yay!), the path to this dir is owned by
                 # root if docker creates it. Thank you, docker. We create the path beforehand
                 # to avoid permission issues.
-                mkdir -p ${ROOT_DIR}/public/typo3temp/var/tests/functional-sqlite-dbs/
+                mkdir -p ${ROOT_DIR}/Web/typo3temp/var/tests/functional-sqlite-dbs/
                 docker-compose run functional_sqlite
                 SUITE_EXIT_CODE=$?
                 ;;
@@ -469,10 +469,10 @@ case ${TEST_SUITE} in
         docker-compose down
         ;;
     update)
-        # pull ${IMAGE_PREFIX}core-testing-*:latest versions of those ones that exist locally
-        docker images ${IMAGE_PREFIX}core-testing-*:latest --format "{{.Repository}}:latest" | xargs -I {} docker pull {}
-        # remove "dangling" ${IMAGE_PREFIX}core-testing-* images (those tagged as <none>)
-        docker images ${IMAGE_PREFIX}core-testing-* --filter "dangling=true" --format "{{.ID}}" | xargs -I {} docker rmi {}
+        # pull typo3/core-testing-*:latest versions of those ones that exist locally
+        docker images typo3/core-testing-*:latest --format "{{.Repository}}:latest" | xargs -I {} docker pull {}
+        # remove "dangling" typo3/core-testing-* images (those tagged as <none>)
+        docker images typo3/core-testing-* --filter "dangling=true" --format "{{.ID}}" | xargs -I {} docker rmi {}
         ;;
     *)
         echo "Invalid -s option argument ${TEST_SUITE}" >&2
