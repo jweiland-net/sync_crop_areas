@@ -13,22 +13,19 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Command;
 
 use JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * Test case.
  */
 class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
 {
-    /**
-     * @var array
-     */
-    protected $testExtensionsToLoad = [
+    protected array $testExtensionsToLoad = [
         'typo3conf/ext/sync_crop_areas',
     ];
 
@@ -99,7 +96,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithEmptyCropColumnWillSkipRecord(): void
     {
-        $this->getDatabaseConnection()->insertArray(
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
             'sys_file_reference',
             [
                 'uid' => 1,
@@ -135,7 +133,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithEmptyPidColumnWillSkipRecord(): void
     {
-        $this->getDatabaseConnection()->insertArray(
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
             'sys_file_reference',
             [
                 'uid' => 1,
@@ -184,7 +183,11 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             'uid_foreign' => 7,
         ];
 
-        $this->getDatabaseConnection()->insertArray('sys_file_reference', $sysFileReferenceRecord);
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
+            'sys_file_reference',
+            $sysFileReferenceRecord
+        );
 
         $this->outputMock
             ->expects(self::exactly(3))
@@ -232,7 +235,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             $this->outputMock
         );
 
-        $statement = $this->getDatabaseConnection()->select('*', 'sys_file_reference', '1=1');
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $statement = $connection->select(['*'], 'sys_file_reference');
         while ($updatedRecord = $statement->fetch()) {
             self::assertSame(
                 '{foo: "bar"}',

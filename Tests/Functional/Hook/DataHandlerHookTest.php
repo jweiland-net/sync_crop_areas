@@ -14,19 +14,16 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * Test case.
  */
 class DataHandlerHookTest extends FunctionalTestCase
 {
-    /**
-     * @var array
-     */
-    protected $testExtensionsToLoad = [
+    protected array $testExtensionsToLoad = [
         'typo3conf/ext/sync_crop_areas',
     ];
 
@@ -202,7 +199,8 @@ class DataHandlerHookTest extends FunctionalTestCase
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
 
-        $statement = $this->getDatabaseConnection()->select('*', 'sys_file_reference', '1=1');
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $statement = $connection->select(['*'], 'sys_file_reference');
         while ($updatedRecord = $statement->fetch()) {
             self::assertSame(
                 '{foo: "bar"}',

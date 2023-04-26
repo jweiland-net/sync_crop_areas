@@ -27,12 +27,13 @@
 	"require": {
 		"php": "^7.4 || ^8.0",
 		"ext-json": "*",
-		"typo3/cms-core": "^11.5.23 || ^12.3.0"
+		"typo3/cms-core": "^11.5.23 || ^12.4.0"
 	},
 	"require-dev": {
-		"roave/security-advisories": "dev-latest",
-		"friendsofphp/php-cs-fixer": "^3.14",
-		"nimut/testing-framework": "^6.0"
+		"sbuerk/typo3-cmscomposerinstallers-testingframework-bridge": "^0.1",
+		"typo3/testing-framework": "^7.0 || ^8.0",
+		"phpunit/phpunit": "^10.1",
+		"typo3/coding-standards": "^0.7"
 	},
 	"autoload": {
 		"psr-4": {
@@ -57,19 +58,5 @@
 			"app-dir": ".build",
 			"web-dir": ".build/public"
 		}
-	},
-	"scripts": {
-		"php:fix": ".build/vendor/bin/php-cs-fixer --config=Build/php-cs-fixer/config.php fix Classes Tests",
-		"ci:php:lint": "find *.php Classes Tests Configuration -name '*.php' -print0 | xargs -0 -n 1 -P 4 php -l",
-		"ci:php:fixer": ".build/vendor/bin/php-cs-fixer --config=Build/php-cs-fixer/config.php fix --dry-run -v --diff --show-progress=dots Classes Tests",
-		"ci:tests:unit": ".build/vendor/bin/phpunit -c .build/vendor/nimut/testing-framework/res/Configuration/UnitTests.xml Tests/Unit",
-		"ci:tests:functional": "find 'Tests/Functional' -wholename '*Test.php' | parallel --gnu 'echo; echo \"Running functional test suite {}\"; php -d date.timezone=Europe/Berlin .build/vendor/bin/phpunit -c .build/vendor/nimut/testing-framework/res/Configuration/FunctionalTests.xml {}';",
-		"link-extension": [
-			"@php -r 'is_dir($extFolder=__DIR__.\"/.build/public/typo3conf/ext/\") || mkdir($extFolder, 0777, true);'",
-			"@php -r 'file_exists($extFolder=__DIR__.\"/.build/public/typo3conf/ext/sync_crop_areas\") || symlink(__DIR__,$extFolder);'"
-		],
-		"post-autoload-dump": [
-			"@link-extension"
-		]
 	}
 }
