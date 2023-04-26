@@ -29,7 +29,7 @@
     beStrictAboutTestsThatDoNotTestAnything="false"
     failOnWarning="true"
     failOnRisky="true"
-    cacheDirectory=".phpunit.cache" requireCoverageMetadata="false">
+>
     <testsuites>
         <testsuite name="Functional tests">
             <directory>../../Tests/Functional/</directory>
