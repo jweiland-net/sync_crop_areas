@@ -63,7 +63,7 @@ handleDbmsAndDriverOptions() {
 
 # Load help text into $HELP
 read -r -d '' HELP <<EOF
-jweiland/avalex test runner. Execute unit test suite and some other details.
+jweiland/sync-crop-areas test runner. Execute unit test suite and some other details.
 Also used by github for test execution.
 
 Recommended docker version is >=20.10 for xdebug break pointing to work reliably, and
@@ -326,7 +326,7 @@ DOCKER_PHP_IMAGE=`echo "php${PHP_VERSION}" | sed -e 's/\.//'`
 shift $((OPTIND - 1))
 TEST_FILE=${1}
 if [ -n "${1}" ]; then
-    TEST_FILE=".Build/public/typo3conf/ext/avalex/${1}"
+    TEST_FILE=".Build/public/typo3conf/ext/sync_crop_areas/${1}"
 fi
 
 if [ ${SCRIPT_VERBOSE} -eq 1 ]; then
