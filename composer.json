@@ -31,8 +31,8 @@
 	},
 	"require-dev": {
 		"sbuerk/typo3-cmscomposerinstallers-testingframework-bridge": "^0.1",
-		"typo3/testing-framework": "^7.0 || ^8.0",
-		"phpunit/phpunit": "^10.1",
+		"typo3/testing-framework": "^7.0",
+		"phpunit/phpunit": "^9.6",
 		"typo3/coding-standards": "^0.6",
 		"friendsofphp/php-cs-fixer": "^3.16"
 	},
