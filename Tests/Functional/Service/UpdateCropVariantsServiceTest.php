@@ -132,11 +132,11 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                                     'allowedAspectRatios' => [
                                                         '4:3' => [
                                                             'title' => '4 zu 3',
-                                                            'value' => 4 / 3
+                                                            'value' => 4 / 3,
                                                         ],
                                                         'NaN' => [
                                                             'title' => 'Free',
-                                                            'value' => 0.0
+                                                            'value' => 0.0,
                                                         ],
                                                     ],
                                                 ],
@@ -145,23 +145,23 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                                     'allowedAspectRatios' => [
                                                         '4:3' => [
                                                             'title' => '4 zu 3',
-                                                            'value' => 4 / 3
+                                                            'value' => 4 / 3,
                                                         ],
                                                         'NaN' => [
                                                             'title' => 'Free',
-                                                            'value' => 0.0
+                                                            'value' => 0.0,
                                                         ],
                                                     ],
                                                 ],
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ]
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
         ];
     }
 
@@ -180,7 +180,7 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
             ->willReturnMap([
                 [
                     'pagesTsConfigIdToHash1',
-                    'Id2Hash'
+                    'Id2Hash',
                 ],
                 [
                     'pagesTsConfigHashToContentId2Hash',
@@ -196,17 +196,17 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                                 'allowedAspectRatios.' => [
                                                     'NaN.' => [
                                                         'title' => 'free',
-                                                        'value' => 0.0
+                                                        'value' => 0.0,
                                                     ],
                                                     '4:3.' => [
                                                         'title' => '4to3',
-                                                        'value' => 1.3333333333
+                                                        'value' => 1.3333333333,
                                                     ],
                                                     '16:9.' => [
                                                         'title' => '16to9',
-                                                        'value' => 1.7777777778
+                                                        'value' => 1.7777777778,
                                                     ],
-                                                ]
+                                                ],
                                             ],
                                             'tablet.' => [
                                                 'title' => 'tablet',
@@ -214,17 +214,17 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                                 'allowedAspectRatios.' => [
                                                     'NaN.' => [
                                                         'title' => 'free',
-                                                        'value' => 0.0
+                                                        'value' => 0.0,
                                                     ],
                                                     '4:3.' => [
                                                         'title' => '4to3',
-                                                        'value' => 1.3333333333
+                                                        'value' => 1.3333333333,
                                                     ],
                                                     '16:9.' => [
                                                         'title' => '16to9',
-                                                        'value' => 1.7777777778
+                                                        'value' => 1.7777777778,
                                                     ],
-                                                ]
+                                                ],
                                             ],
                                             'smartphone.' => [
                                                 'title' => 'smartphone',
@@ -232,24 +232,24 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
                                                 'allowedAspectRatios.' => [
                                                     'NaN.' => [
                                                         'title' => 'free',
-                                                        'value' => 0.0
+                                                        'value' => 0.0,
                                                     ],
                                                     '4:3.' => [
                                                         'title' => '4to3',
-                                                        'value' => 1.3333333333
+                                                        'value' => 1.3333333333,
                                                     ],
                                                     '16:9.' => [
                                                         'title' => '16to9',
-                                                        'value' => 1.7777777778
+                                                        'value' => 1.7777777778,
                                                     ],
-                                                ]
-                                            ]
-                                        ]
-                                    ]
-                                ]
-                            ]
-                        ]
-                    ]
+                                                ],
+                                            ],
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
                 ],
             ]);
 
