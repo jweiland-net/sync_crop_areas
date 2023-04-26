@@ -58,7 +58,7 @@
 		"typo3/cms": {
 			"extension-key": "sync_crop_areas",
 			"app-dir": ".Build",
-			"web-dir": ".Build/public"
+			"web-dir": ".Build/Web"
 		}
 	}
 }

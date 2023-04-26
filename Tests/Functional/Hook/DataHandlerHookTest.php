@@ -24,7 +24,7 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 class DataHandlerHookTest extends FunctionalTestCase
 {
     protected array $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas',
+        'sync_crop_areas',
     ];
 
     protected DataHandlerHook $subject;
