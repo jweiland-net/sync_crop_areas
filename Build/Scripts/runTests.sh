@@ -209,6 +209,7 @@ if ! command -v realpath &> /dev/null; then
 else
   ROOT_DIR=`realpath ${PWD}/../../`
 fi
+
 TEST_SUITE=""
 DBMS="sqlite"
 PHP_VERSION="7.4"
@@ -329,6 +330,9 @@ shift $((OPTIND - 1))
 TEST_FILE=${1}
 if [ -n "${1}" ]; then
     TEST_FILE="Web/typo3conf/ext/sync_crop_areas/${1}"
+    if [ "${TYPO3_VERSION}" == "12" ]; then
+        TEST_FILE="./${1}"
+    fi
 fi
 
 if [ ${SCRIPT_VERBOSE} -eq 1 ]; then

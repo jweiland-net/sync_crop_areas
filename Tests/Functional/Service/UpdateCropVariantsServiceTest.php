@@ -13,11 +13,7 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Service;
 
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
-use PHPUnit\Framework\MockObject\MockObject;
-use TYPO3\CMS\Core\Cache\CacheManager;
-use TYPO3\CMS\Core\Cache\Frontend\FrontendInterface;
-use TYPO3\CMS\Core\Cache\Frontend\VariableFrontend;
-use TYPO3\CMS\Core\Utility\GeneralUtility;
+use JWeiland\SyncCropAreas\Tests\Functional\Traits\FrontendSiteTrait;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -25,6 +21,8 @@ use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
  */
 class UpdateCropVariantsServiceTest extends FunctionalTestCase
 {
+    use FrontendSiteTrait;
+
     protected array $testExtensionsToLoad = [
         'typo3conf/ext/sync_crop_areas',
     ];
@@ -58,8 +56,12 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
     {
         parent::setUp();
 
-        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/pages.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
+
+        $this->setUpFrontendRootPage(1);
+        $this->setUpFrontendSite(1);
 
         $this->activateTcaCropVariantsForSysFileReference();
 
@@ -169,96 +171,62 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
 
     protected function activatePageTsConfigCropVariants(): void
     {
-        /** @var FrontendInterface|MockObject $runtimeCacheMock */
-        $runtimeCacheMock = $this->createMock(VariableFrontend::class);
-        $runtimeCacheMock
-            ->expects(self::atLeastOnce())
-            ->method('get')
-            ->willReturnMap([
-                [
-                    'pagesTsConfigIdToHash1',
-                    'Id2Hash',
-                ],
-                [
-                    'pagesTsConfigHashToContentId2Hash',
-                    [
-                        'TCEFORM.' => [
-                            'sys_file_reference.' => [
-                                'crop.' => [
-                                    'config.' => [
-                                        'cropVariants.' => [
-                                            'desktop.' => [
-                                                'title' => 'default',
-                                                'selectedRatio' => 'NaN',
-                                                'allowedAspectRatios.' => [
-                                                    'NaN.' => [
-                                                        'title' => 'free',
-                                                        'value' => 0.0,
-                                                    ],
-                                                    '4:3.' => [
-                                                        'title' => '4to3',
-                                                        'value' => 1.3333333333,
-                                                    ],
-                                                    '16:9.' => [
-                                                        'title' => '16to9',
-                                                        'value' => 1.7777777778,
-                                                    ],
-                                                ],
-                                            ],
-                                            'tablet.' => [
-                                                'title' => 'tablet',
-                                                'selectedRatio' => 'NaN',
-                                                'allowedAspectRatios.' => [
-                                                    'NaN.' => [
-                                                        'title' => 'free',
-                                                        'value' => 0.0,
-                                                    ],
-                                                    '4:3.' => [
-                                                        'title' => '4to3',
-                                                        'value' => 1.3333333333,
-                                                    ],
-                                                    '16:9.' => [
-                                                        'title' => '16to9',
-                                                        'value' => 1.7777777778,
-                                                    ],
-                                                ],
-                                            ],
-                                            'smartphone.' => [
-                                                'title' => 'smartphone',
-                                                'selectedRatio' => 'NaN',
-                                                'allowedAspectRatios.' => [
-                                                    'NaN.' => [
-                                                        'title' => 'free',
-                                                        'value' => 0.0,
-                                                    ],
-                                                    '4:3.' => [
-                                                        'title' => '4to3',
-                                                        'value' => 1.3333333333,
-                                                    ],
-                                                    '16:9.' => [
-                                                        'title' => '16to9',
-                                                        'value' => 1.7777777778,
-                                                    ],
-                                                ],
-                                            ],
-                                        ],
-                                    ],
-                                ],
-                            ],
-                        ],
-                    ],
-                ],
-            ]);
-
-        /** @var CacheManager|MockObject $cacheManagerMock */
-        $cacheManagerMock = $this->createMock(CacheManager::class);
-        $cacheManagerMock
-            ->expects(self::atLeastOnce())
-            ->method('getCache')
-            ->with(self::identicalTo('runtime'))
-            ->willReturn($runtimeCacheMock);
-
-        GeneralUtility::setSingletonInstance(CacheManager::class, $cacheManagerMock);
+        $GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPageTSconfig'] = '
+TCEFORM.sys_file_reference.crop.config.cropVariants.desktop {
+  title = default
+  selectedRatio = NaN
+  allowedAspectRatios {
+    NaN {
+      title = free
+      value = 0.0
+    }
+    4:3 {
+      title = 4to3
+      value = 1.3333333333
+    }
+    16:9 {
+      title = 16to9
+      value = 1.7777777778
+    }
+  }
+}
+TCEFORM.sys_file_reference.crop.config.cropVariants.tablet {
+  title = tablet
+  selectedRatio = NaN
+  allowedAspectRatios {
+    NaN {
+      title = free
+      value = 0.0
+    }
+    4:3 {
+      title = 4to3
+      value = 1.3333333333
+    }
+    16:9 {
+      title = 16to9
+      value = 1.7777777778
+    }
+  }
+}
+TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
+  title = smartphone
+  selectedRatio = NaN
+  allowedAspectRatios {
+    NaN {
+      title = free
+      value = 0.0
+    }
+    4:3 {
+      title = 4to3
+      value = 1.3333333333
+    }
+    16:9 {
+      title = 16to9
+      value = 1.7777777778
+    }
+  }
+}
+        ';
     }
 
     /**
