@@ -211,8 +211,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithChangedCropWillUpdateRecord(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->outputMock
             ->expects(self::exactly(2))

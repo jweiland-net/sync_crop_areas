@@ -152,8 +152,8 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function hookWillUpdateSysFileReferenceRecords(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->tcaHelperMock
             ->expects(self::atLeastOnce())
