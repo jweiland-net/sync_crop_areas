@@ -1,32 +1,59 @@
-.. include:: ../Includes.txt
+..  include:: /Includes.rst.txt
 
 
-.. _installation:
+..  _installation:
 
 ============
 Installation
 ============
 
-Target group: **Administrators**
+Composer
+========
 
-Installation via Composer
-=========================
+If your TYPO3 installation works in composer mode, please execute
+following command:
 
-Run the following command within your Composer based TYPO3 project:
+..  code-block:: bash
 
-```
-composer require jweiland/sync-crop-areas
-```
+    composer req jweiland/sync-crop-areas
+    vendor/bin/typo3 extension:setup --extension=sync_crop_areas
 
-Installation via ExtensionManager
-=================================
+If you work with DDEV please execute this command:
 
-The extension needs to be installed like any other extension of TYPO3 CMS:
+..  code-block:: bash
 
-#. Visit ExtensionManager
+    ddev composer req jweiland/sync-crop-areas
+    ddev exec vendor/bin/typo3 extension:setup --extension=sync_crop_areas
 
-#. Switch over to `Get Extensions`
+ExtensionManager
+================
 
-#. Search for `sync_crop_areas`
+On non composer based TYPO3 installations you can install `sync_crop_areas`
+still over the ExtensionManager:
 
-#. Install extension
+..  rst-class:: bignums
+
+1.  Login
+
+    Login to backend of your TYPO3 installation as an administrator
+    or system maintainer.
+
+2.  Open ExtensionManager
+
+    Click on `Extensions` from the left menu to open the ExtensionManager.
+
+3.  Update Extensions
+
+    Choose `Get Extensions` from the upper selectbox and click on
+    the `Update now` button at the upper right.
+
+4.  Install `sync_crop_areas`
+
+    Use the search field to find `sync_crop_areas`. Choose
+    the `sync_crop_areas` line from the search result and click on the cloud
+    icon to install `sync_crop_areas`.
+
+Next step
+=========
+
+:ref:`Configure sync_crop_areas <configuration>`.
