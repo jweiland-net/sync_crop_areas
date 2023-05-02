@@ -13,23 +13,20 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Command;
 
 use JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * Test case.
  */
 class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
 {
-    /**
-     * @var array
-     */
-    protected $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas'
+    protected array $testExtensionsToLoad = [
+        'typo3conf/ext/sync_crop_areas',
     ];
 
     protected SynchronizeCropVariantsCommand $subject;
@@ -85,7 +82,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ->method('writeln')
             ->willReturnOnConsecutiveCalls([
                 ['Start synchronizing crop variants of table sys_file_reference', null],
-                ['We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values', null]
+                ['We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values', null],
             ]);
 
         $this->subject->run(
@@ -99,7 +96,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithEmptyCropColumnWillSkipRecord(): void
     {
-        $this->getDatabaseConnection()->insertArray(
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
             'sys_file_reference',
             [
                 'uid' => 1,
@@ -107,7 +105,6 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
                 'crop' => '',
                 'tstamp' => time(),
                 'crdate' => time(),
-                'cruser_id' => 1,
                 'tablenames' => 'tt_content',
                 'fieldname' => 'image',
                 'uid_local' => 13,
@@ -121,7 +118,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ->willReturnOnConsecutiveCalls([
                 ['Start synchronizing crop variants of table sys_file_reference', null],
                 ['SKIP: Column "crop" of sys_file_reference record with UID 1 is empty', null],
-                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null],
             ]);
 
         $this->subject->run(
@@ -135,7 +132,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithEmptyPidColumnWillSkipRecord(): void
     {
-        $this->getDatabaseConnection()->insertArray(
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
             'sys_file_reference',
             [
                 'uid' => 1,
@@ -143,7 +141,6 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
                 'crop' => '{}',
                 'tstamp' => time(),
                 'crdate' => time(),
-                'cruser_id' => 1,
                 'tablenames' => 'tt_content',
                 'fieldname' => 'image',
                 'uid_local' => 13,
@@ -157,7 +154,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ->willReturnOnConsecutiveCalls([
                 ['Start synchronizing crop variants of table sys_file_reference', null],
                 ['SKIP: Column "pid" of sys_file_reference record with UID 1 is empty', null],
-                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null],
             ]);
 
         $this->subject->run(
@@ -177,14 +174,17 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             'crop' => '{}',
             'tstamp' => time(),
             'crdate' => time(),
-            'cruser_id' => 1,
             'tablenames' => 'tt_content',
             'fieldname' => 'image',
             'uid_local' => 13,
             'uid_foreign' => 7,
         ];
 
-        $this->getDatabaseConnection()->insertArray('sys_file_reference', $sysFileReferenceRecord);
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $connection->insert(
+            'sys_file_reference',
+            $sysFileReferenceRecord
+        );
 
         $this->outputMock
             ->expects(self::exactly(3))
@@ -192,7 +192,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             ->willReturnOnConsecutiveCalls([
                 ['Start synchronizing crop variants of table sys_file_reference', null],
                 ['SKIP: Column "crop" of table "sys_file_reference" with UID 1 because it is unchanged, empty or invalid JSON', null],
-                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null]
+                ['We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values', null],
             ]);
 
         $this->updateCropVariantsServiceMock
@@ -211,15 +211,15 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
      */
     public function runWithChangedCropWillUpdateRecord(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->outputMock
             ->expects(self::exactly(2))
             ->method('writeln')
             ->willReturnOnConsecutiveCalls([
                 ['Start synchronizing crop variants of table sys_file_reference', null],
-                ['We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values', null]
+                ['We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values', null],
             ]);
 
         $this->updateCropVariantsServiceMock
@@ -232,7 +232,8 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             $this->outputMock
         );
 
-        $statement = $this->getDatabaseConnection()->select('*', 'sys_file_reference', '1=1');
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $statement = $connection->select(['*'], 'sys_file_reference');
         while ($updatedRecord = $statement->fetch()) {
             self::assertSame(
                 '{foo: "bar"}',

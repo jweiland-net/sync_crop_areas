@@ -26,11 +26,14 @@ nbproject
 
 # Temporary files and folders
 /.cache
+.Build
 .php_cs.cache
 .php-cs-fixer.cache
 .sass-cache
 .session
 *.log
+.env
 
 # Ignore composer stuff
 /composer.lock
+composer.json.testing

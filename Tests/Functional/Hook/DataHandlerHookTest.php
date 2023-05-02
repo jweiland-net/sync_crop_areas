@@ -14,20 +14,17 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
-use Nimut\TestingFramework\TestCase\FunctionalTestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
  * Test case.
  */
 class DataHandlerHookTest extends FunctionalTestCase
 {
-    /**
-     * @var array
-     */
-    protected $testExtensionsToLoad = [
-        'typo3conf/ext/sync_crop_areas'
+    protected array $testExtensionsToLoad = [
+        'typo3conf/ext/sync_crop_areas',
     ];
 
     protected DataHandlerHook $subject;
@@ -102,9 +99,9 @@ class DataHandlerHookTest extends FunctionalTestCase
         $dataHandler->datamap = [
             'tt_content' => [
                 1 => [
-                    'pid' => 12
-                ]
-            ]
+                    'pid' => 12,
+                ],
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
@@ -142,9 +139,9 @@ class DataHandlerHookTest extends FunctionalTestCase
         $dataHandler->datamap = [
             $invalidTable => [
                 1 => [
-                    'pid' => 12
-                ]
-            ]
+                    'pid' => 12,
+                ],
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
@@ -155,8 +152,8 @@ class DataHandlerHookTest extends FunctionalTestCase
      */
     public function hookWillUpdateSysFileReferenceRecords(): void
     {
-        $this->importDataSet(__DIR__ . '/../Fixtures/tt_content.xml');
-        $this->importDataSet(__DIR__ . '/../Fixtures/sys_file_reference.xml');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->tcaHelperMock
             ->expects(self::atLeastOnce())
@@ -188,21 +185,22 @@ class DataHandlerHookTest extends FunctionalTestCase
                 ],
                 3 => [
                     'hidden' => 0,
-                ]
+                ],
             ],
             'tt_content' => [
                 1 => [
-                    'image' => '1'
+                    'image' => '1',
                 ],
                 2 => [
-                    'image' => '2,3'
+                    'image' => '2,3',
                 ],
-            ]
+            ],
         ];
 
         $this->subject->processDatamap_afterAllOperations($dataHandler);
 
-        $statement = $this->getDatabaseConnection()->select('*', 'sys_file_reference', '1=1');
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        $statement = $connection->select(['*'], 'sys_file_reference');
         while ($updatedRecord = $statement->fetch()) {
             self::assertSame(
                 '{foo: "bar"}',

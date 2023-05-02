@@ -11,7 +11,7 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Command;
 
-use Doctrine\DBAL\Driver\Statement;
+use Doctrine\DBAL\Result;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -73,7 +73,7 @@ class SynchronizeCropVariantsCommand extends Command
         $processed = 0;
         $skipped = 0;
         $statement = $this->getStatementForSysFileReferences();
-        while ($sysFileReferenceRecord = $statement->fetch()) {
+        while ($sysFileReferenceRecord = $statement->fetchAssociative()) {
             $counter++;
             if (empty($sysFileReferenceRecord['crop'])) {
                 $this->output->writeln(sprintf(
@@ -112,10 +112,10 @@ class SynchronizeCropVariantsCommand extends Command
                 $connection->update(
                     'sys_file_reference',
                     [
-                        'crop' => $updatedSysFileReferenceRecord['crop']
+                        'crop' => $updatedSysFileReferenceRecord['crop'],
                     ],
                     [
-                        'uid' => (int)$sysFileReferenceRecord['uid']
+                        'uid' => (int)$sysFileReferenceRecord['uid'],
                     ]
                 );
                 $processed++;
@@ -125,7 +125,7 @@ class SynchronizeCropVariantsCommand extends Command
         return [$counter, $processed, $skipped];
     }
 
-    protected function getStatementForSysFileReferences(): Statement
+    protected function getStatementForSysFileReferences(): Result
     {
         $queryBuilder = $this->getConnectionPool()->getQueryBuilderForTable('sys_file_reference');
         $queryBuilder
@@ -142,7 +142,7 @@ class SynchronizeCropVariantsCommand extends Command
                     $queryBuilder->createNamedParameter(1, \PDO::PARAM_INT)
                 )
             )
-            ->execute();
+            ->executeQuery();
     }
 
     protected function getConnectionPool(): ConnectionPool
