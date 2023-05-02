@@ -1,7 +1,7 @@
-.. include:: ../Includes.txt
+..  include:: /Includes.rst.txt
 
 
-.. _known-problems:
+..  _known-problems:
 
 ==============
 Known Problems
@@ -20,7 +20,7 @@ Please check, if your editors have access rights to column sys_file_reference:sy
 by default, so, if an editor has no rights for this column, the CropVariants can't be synchronized.
 
 
-.. _known-problems_project-upgrade:
+..  _known-problems_project-upgrade:
 
 Is there an automatism to upgrade all sys_file_reference records?
 =================================================================
@@ -34,7 +34,7 @@ record and save it, you can use a CLI command or scheduler task.
 **Task**: Choose `Execute console commands` -> `sync_crop_areas:sync` -> execute task once.
 
 
-.. _known-problems_not-working:
+..  _known-problems_not-working:
 
 sync_crop_areas does not work for column of extension XY
 ========================================================
@@ -62,20 +62,20 @@ extensions BEFORE your site_package. Go into
 and check, if all extensions with missing `sync_crop_area` column is listed
 in section `depends`. Here an example for `bootstrap_package`:
 
-.. code-block:: php
+..  code-block:: php
 
-   ...
-   'constraints' => [
-       'depends' => [
-           'typo3' => '10.4.0-10.4.99',
-           'maps2' => '9.3.0-9.99.99',
-           'tt_address' => '5.2.0-5.99.99',
-           'bootstrap_package' => '12.0.1-12.99.99'
-       ],
-       'conflicts' => [],
-       'suggests' => [],
-   ],
-   ...
+    ...
+    'constraints' => [
+        'depends' => [
+            'typo3' => '11.5.23-12.4.99',
+            'maps2' => '9.3.0-10.99.99',
+            'tt_address' => '5.2.0-6.99.99',
+            'bootstrap_package' => '12.0.1-12.99.99'
+        ],
+        'conflicts' => [],
+        'suggests' => [],
+    ],
+    ...
 
 
 Go into your SitePackage extension and create a new file:
@@ -86,37 +86,37 @@ Add following PHP block and update the variables `$table` and `$columns`
 to your needs.:
 
 
-.. code-block:: php
+..  code-block:: php
 
-   <?php
-   if (!defined('TYPO3')) {
-       die('Access denied.');
-   }
+    <?php
+    if (!defined('TYPO3')) {
+        die('Access denied.');
+    }
 
-   call_user_func(static function () {
-       // Only needed, if foreign extension author do not use
-       // "imageoverlayPalette" palette from core.
-       // Example for bootstrap table "tx_bootstrappackage_card_group_item":
-       $table = 'tx_bootstrappackage_card_group_item';
-       $columns = ['image'];
-       $imgFileType = \TYPO3\CMS\Core\Resource\File::FILETYPE_IMAGE;
+    call_user_func(static function () {
+        // Only needed, if foreign extension author do not use
+        // "imageoverlayPalette" palette from core.
+        // Example for bootstrap table "tx_bootstrappackage_card_group_item":
+        $table = 'tx_bootstrappackage_card_group_item';
+        $columns = ['image'];
+        $imgFileType = \TYPO3\CMS\Core\Resource\File::FILETYPE_IMAGE;
 
-       if (isset($GLOBALS['TCA'][$table]['columns'])) {
-           foreach ($columns as $column) {
-               if (isset($GLOBALS['TCA'][$table]['columns'][$column]['config'])) {
-                   $imgConfig = $GLOBALS['TCA'][$table]['columns'][$column]['config'];
-                   if (isset($imgConfig['overrideChildTca']['types'][$imgFileType]['showitem'])) {
-                       // Add column "sync_crop_area" before "crop" column
-                       $imgConfig['overrideChildTca']['types'][$imgFileType]['showitem'] = str_replace(
-                           'crop',
-                           'sync_crop_area, crop',
-                           $imgConfig['overrideChildTca']['types'][$imgFileType]['showitem']
-                       );
-                       $GLOBALS['TCA'][$table]['columns'][$column]['config'] = $imgConfig;
-                   }
-               }
-           }
-       }
-   });
+        if (isset($GLOBALS['TCA'][$table]['columns'])) {
+            foreach ($columns as $column) {
+                if (isset($GLOBALS['TCA'][$table]['columns'][$column]['config'])) {
+                    $imgConfig = $GLOBALS['TCA'][$table]['columns'][$column]['config'];
+                    if (isset($imgConfig['overrideChildTca']['types'][$imgFileType]['showitem'])) {
+                        // Add column "sync_crop_area" before "crop" column
+                        $imgConfig['overrideChildTca']['types'][$imgFileType]['showitem'] = str_replace(
+                            'crop',
+                            'sync_crop_area, crop',
+                            $imgConfig['overrideChildTca']['types'][$imgFileType]['showitem']
+                        );
+                        $GLOBALS['TCA'][$table]['columns'][$column]['config'] = $imgConfig;
+                    }
+                }
+            }
+        }
+    });
 
 Clear System Cache and you should be done.

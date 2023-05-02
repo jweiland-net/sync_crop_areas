@@ -1,60 +1,63 @@
-.. include:: Includes.txt
+..  include:: /Includes.rst.txt
 
 
-.. Every manual should have a start label for cross-referencing to
-.. start page. Do not remove this!
+..  _start:
 
-.. _start:
+==============
+Sync Crop Area
+==============
 
-===============
-sync_crop_areas
-===============
+:Extension key:
+    sync_crop_areas
 
-.. only:: html
+:Package name:
+    jweiland/sync-crop-areas
 
-   :Classification:
-      sync_crop_areas
+:Version:
+    |release|
 
-   :Version:
-      |release|
+:Language:
+    en
 
-   :Language:
-      en
+:Author:
+    Stefan Froemken
 
-   :Description:
-      Manual covering TYPO3 extension sync_crop_areas
+:License:
+    This document is published under the
+    `Creative Commons BY 4.0 <https://creativecommons.org/licenses/by/4.0/>`__
+    license.
 
-   :Keywords:
-      typo3, TYPO3 CMS, sync, crop, variants
+:Rendered:
+    |today|
 
-   :Copyright:
-      2013-2020
+----
 
-   :Author:
-      Stefan Froemken
+Imagine you have the 4 crop variants "Desktop", "Landscape", "Tablet"
+and "Mobile" at your disposal, then it may happen that you have to copy the
+crop area of "Desktop" to all other crop variants. Slight shifts of the image
+crop between the crop variants are almost inevitable. `sync_crop_areas`
+provides a remedy here and offers you to transfer the image crop of the
+first crop variant (here: "Desktop") to all other crop variants with the
+same image ratio.
 
-   :Email:
-      projects@jweiland.net
+----
 
-   :License:
-      This document is published under the Open Publication License
-      available from http://www.opencontent.org/openpub/
+**Table of Contents:**
 
-   :Rendered:
-      |today|
+..  toctree::
+    :maxdepth: 2
+    :titlesonly:
 
-   The content of this document is related to TYPO3,
-   a GNU/GPL CMS/Framework available from `www.typo3.org <https://typo3.org/>`__.
+    Introduction/Index
+    Installation/Index
+    Configuration/Index
+    KnownProblems/Index
+    ChangeLog/Index
 
+..  Meta Menu
 
-   **Table of Contents**
+..  toctree::
+    :hidden:
 
-.. toctree::
-   :maxdepth: 2
-
-   Introduction/Index
-   Installation/Index
-   Configuration/Index
-   KnownProblems/Index
-   Contribute/Index
-   ChangeLog/Index
+    Sitemap
+    genindex
