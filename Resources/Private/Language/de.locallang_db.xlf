@@ -3,13 +3,13 @@
   <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2020-04-30T15:11:04Z" product-name="sync_crop_areas">
     <header/>
     <body>
-      <trans-unit id="sys_file_reference.sync_crop_area">
+      <trans-unit id="sys_file_reference.sync_crop_area" approved="yes">
         <source>Synchronize cropArea</source>
-        <target state="translated">Synchronisiere cropArea</target>
+        <target state="final">Synchronisiere cropArea</target>
       </trans-unit>
-      <trans-unit id="sys_file_reference.sync_crop_area.description">
+      <trans-unit id="sys_file_reference.sync_crop_area.description" approved="yes">
         <source>Use cropArea of first cropVariant and copy it over to the other cropVariants</source>
-        <target state="translated">Verwende die cropArea der ersten cropVariant und kopiere diese in alle anderen cropVariants</target>
+        <target state="final">Verwende die cropArea der ersten cropVariant und kopiere diese in alle anderen cropVariants</target>
       </trans-unit>
     </body>
   </file>
