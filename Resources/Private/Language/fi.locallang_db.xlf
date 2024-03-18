@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<xliff version="1.0">
+  <file source-language="en" target-language="fi" datatype="plaintext" original="messages" date="2020-04-30T15:11:04Z" product-name="sync_crop_areas">
+    <header/>
+    <body>
+      <trans-unit id="sys_file_reference.sync_crop_area">
+        <source>Synchronize cropArea</source>
+        <target state="needs-translation">Synchronize cropArea</target>
+      </trans-unit>
+      <trans-unit id="sys_file_reference.sync_crop_area.description">
+        <source>Use cropArea of first cropVariant and copy it over to the other cropVariants</source>
+        <target state="needs-translation">Use cropArea of first cropVariant and copy it over to the other cropVariants</target>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>
