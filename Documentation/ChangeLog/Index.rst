@@ -7,6 +7,14 @@
 ChangeLog
 =========
 
+Version 4.0.0
+=============
+
+*   TASK: Add TYPO3 13 compatibility
+*   TASK: Remove TYPO3 12 compatibility
+*   TASK: Remove TYPO3 11 compatibility
+*   TASK: Update Test Suite removing testing docker
+
 Version 3.0.0
 =============
 
