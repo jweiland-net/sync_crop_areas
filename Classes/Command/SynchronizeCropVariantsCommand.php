@@ -13,6 +13,7 @@ namespace JWeiland\SyncCropAreas\Command;
 
 use Doctrine\DBAL\Result;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
+use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
@@ -20,23 +21,19 @@ use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 
-/**
- * Use this service to synchronize first found cropVariants to the other defined cropVariants
- */
-class SynchronizeCropVariantsCommand extends Command
+#[AsCommand(
+    name: 'sync_crop_areas:sync',
+    description: 'Use this service to synchronize first found cropVariants to the other defined cropVariants',
+)]
+final class SynchronizeCropVariantsCommand extends Command
 {
     protected OutputInterface $output;
 
-    protected UpdateCropVariantsService $updateCropVariantsService;
-
-    /*
-     * Will be called by DI, so please don't add extbase classes with inject methods here.
-     */
-    public function __construct(UpdateCropVariantsService $updateCropVariantsService, string $name = null)
-    {
+    public function __construct(
+        protected UpdateCropVariantsService $updateCropVariantsService,
+        string $name = null
+    ) {
         parent::__construct($name);
-
-        $this->updateCropVariantsService = $updateCropVariantsService;
     }
 
     protected function configure(): void
@@ -58,13 +55,14 @@ class SynchronizeCropVariantsCommand extends Command
         $output->writeln('Start synchronizing crop variants of table sys_file_reference');
         [$counter, $processed, $skipped] = $this->synchronizeCropVariants();
         $output->writeln(sprintf(
-            'We had %d sys_file_reference records in total. %d records were processed successfully and %d records must be skipped because of invalid values',
+            'We had %d sys_file_reference records in total. %d records were processed successfully and %d records ' .
+            'must be skipped because of invalid values',
             $counter,
             $processed,
             $skipped
         ));
 
-        return 0;
+        return Command::SUCCESS;
     }
 
     protected function synchronizeCropVariants(): array
@@ -139,7 +137,7 @@ class SynchronizeCropVariantsCommand extends Command
             ->where(
                 $queryBuilder->expr()->eq(
                     'sync_crop_area',
-                    $queryBuilder->createNamedParameter(1, \PDO::PARAM_INT)
+                    $queryBuilder->createNamedParameter(1)
                 )
             )
             ->executeQuery();
