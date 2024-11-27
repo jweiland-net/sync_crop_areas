@@ -15,4 +15,4 @@ services:
     tags:
       - name: 'console.command'
         command: 'sync_crop_areas:sync'
-        schedulable: true
+        description: 'Use this service to synchronize first found cropVariants to the other defined cropVariants'
