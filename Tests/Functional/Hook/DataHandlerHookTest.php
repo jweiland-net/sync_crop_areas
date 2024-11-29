@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
 
+use Doctrine\DBAL\Exception;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
@@ -69,7 +70,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithEmptyDatamapWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -88,7 +89,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithoutSysFileReferenceWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -107,7 +108,7 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->subject->processDatamap_afterAllOperations($dataHandler);
     }
 
-    public function dataProviderForInvalidFileTables(): array
+    public static function dataProviderForInvalidFileTables(): array
     {
         return [
             'Do not process sys_file records' => ['sys_file'],
@@ -128,7 +129,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithOnlyFileTablesWillNotProcessAnything(string $invalidTable): void
     {
         $this->tcaHelperMock
-            ->expects(self::never())
+            ->expects($this->never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -149,6 +150,7 @@ class DataHandlerHookTest extends FunctionalTestCase
 
     /**
      * @test
+     * @throws Exception
      */
     public function hookWillUpdateSysFileReferenceRecords(): void
     {
@@ -156,13 +158,13 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->tcaHelperMock
-            ->expects(self::atLeastOnce())
+            ->expects($this->atLeastOnce())
             ->method('getColumnsWithFileReferences')
             ->with(self::identicalTo('tt_content'))
             ->willReturn(['image']);
 
         $this->updateCropVariantsServiceMock
-            ->expects(self::exactly(3))
+            ->expects($this->exactly(3))
             ->method('synchronizeCropVariants')
             ->willReturnCallback(static function (array $sysFileReferenceRecord) {
                 self::assertArrayHasKey('uid', $sysFileReferenceRecord);
@@ -201,7 +203,7 @@ class DataHandlerHookTest extends FunctionalTestCase
 
         $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
         $statement = $connection->select(['*'], 'sys_file_reference');
-        while ($updatedRecord = $statement->fetch()) {
+        while ($updatedRecord = $statement->fetchAssociative()) {
             self::assertSame(
                 '{foo: "bar"}',
                 $updatedRecord['crop']
