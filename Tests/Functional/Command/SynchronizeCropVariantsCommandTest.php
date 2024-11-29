@@ -78,13 +78,13 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
     public function runWithNoSysFileReferencesDisplaysEmptyStatistic(): void
     {
         $this->outputMock
-            ->expects($this->exactly(2))
+            ->expects(self::exactly(2))
             ->method('writeln')
-            ->with($this->callback(function ($output) {
+            ->with(self::callback(function ($output) {
                 static $calls = 0;
                 $expectedOutputs = [
                     'Start synchronizing crop variants of table sys_file_reference',
-                    'We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values'
+                    'We had 0 sys_file_reference records in total. 0 records were processed successfully and 0 records must be skipped because of invalid values',
                 ];
 
                 // Assert each call matches the expected output
@@ -121,7 +121,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
 
         $this->outputMock
-            ->expects($this->exactly(3))
+            ->expects(self::exactly(3))
             ->method('writeln')
             ->willReturnOnConsecutiveCalls(
                 'Start synchronizing crop variants of table sys_file_reference',
@@ -157,7 +157,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
 
         $this->outputMock
-            ->expects($this->exactly(3))
+            ->expects(self::exactly(3))
             ->method('writeln')
             ->willReturnOnConsecutiveCalls(
                 'Start synchronizing crop variants of table sys_file_reference',
@@ -195,7 +195,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
 
         $this->outputMock
-            ->expects($this->exactly(3))
+            ->expects(self::exactly(3))
             ->method('writeln')
             ->willReturnOnConsecutiveCalls(
                 'Start synchronizing crop variants of table sys_file_reference',
@@ -204,7 +204,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             );
 
         $this->updateCropVariantsServiceMock
-            ->expects($this->atLeastOnce())
+            ->expects(self::atLeastOnce())
             ->method('synchronizeCropVariants')
             ->willReturn($sysFileReferenceRecord);
 
@@ -223,7 +223,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->outputMock
-            ->expects($this->exactly(2))
+            ->expects(self::exactly(2))
             ->method('writeln')
             ->willReturnOnConsecutiveCalls(
                 'Start synchronizing crop variants of table sys_file_reference',
@@ -231,7 +231,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
             );
 
         $this->updateCropVariantsServiceMock
-            ->expects($this->atLeastOnce())
+            ->expects(self::atLeastOnce())
             ->method('synchronizeCropVariants')
             ->willReturn(['crop' => '{foo: "bar"}']);
 

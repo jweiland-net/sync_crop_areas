@@ -70,7 +70,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithEmptyDatamapWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
-            ->expects($this->never())
+            ->expects(self::never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -89,7 +89,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithoutSysFileReferenceWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
-            ->expects($this->never())
+            ->expects(self::never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -129,7 +129,7 @@ class DataHandlerHookTest extends FunctionalTestCase
     public function hookWithOnlyFileTablesWillNotProcessAnything(string $invalidTable): void
     {
         $this->tcaHelperMock
-            ->expects($this->never())
+            ->expects(self::never())
             ->method('getColumnsWithFileReferences');
 
         /** @var DataHandler|MockObject $dataHandlerMock */
@@ -158,13 +158,13 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
 
         $this->tcaHelperMock
-            ->expects($this->atLeastOnce())
+            ->expects(self::atLeastOnce())
             ->method('getColumnsWithFileReferences')
             ->with(self::identicalTo('tt_content'))
             ->willReturn(['image']);
 
         $this->updateCropVariantsServiceMock
-            ->expects($this->exactly(3))
+            ->expects(self::exactly(3))
             ->method('synchronizeCropVariants')
             ->willReturnCallback(static function (array $sysFileReferenceRecord) {
                 self::assertArrayHasKey('uid', $sysFileReferenceRecord);
