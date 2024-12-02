@@ -17,6 +17,7 @@ use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Database\Connection;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Database\Query\Restriction\DeletedRestriction;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -137,7 +138,7 @@ final class SynchronizeCropVariantsCommand extends Command
             ->where(
                 $queryBuilder->expr()->eq(
                     'sync_crop_area',
-                    1
+                    $queryBuilder->createNamedParameter(1, Connection::PARAM_STR)
                 )
             )
             ->executeQuery();
