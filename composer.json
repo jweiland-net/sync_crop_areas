@@ -1,8 +1,8 @@
 {
 	"name": "jweiland/sync-crop-areas",
-	"type": "typo3-cms-extension",
 	"description": "Sync first found crop area to all other CropVariants",
 	"license": "GPL-2.0-or-later",
+	"type": "typo3-cms-extension",
 	"keywords": [
 		"typo3",
 		"TYPO3 CMS",
@@ -13,28 +13,35 @@
 		"area",
 		"variants"
 	],
-	"homepage": "https://jweiland.net",
 	"authors": [
 		{
 			"name": "Stefan Froemken",
 			"email": "sfroemken@jweiland.net",
 			"role": "Lead Developer"
+		},
+		{
+			"name": "Hoja Mustaffa Abdul Latheef",
+			"email": "projects@jweiland.net",
+			"role": "Developer"
 		}
 	],
+	"homepage": "https://jweiland.net",
 	"support": {
 		"email": "projects@jweiland.net"
 	},
 	"require": {
-		"php": "^7.4 || ^8.0",
+		"php": "^8.2",
 		"ext-json": "*",
-		"typo3/cms-core": "^11.5.23 || ^12.4.0"
+		"typo3/cms-core": "^13.4.0"
 	},
 	"require-dev": {
+		"ergebnis/composer-normalize": "^2.44",
+		"friendsofphp/php-cs-fixer": "^3.14",
+		"phpstan/phpstan": "^1.10",
+		"roave/security-advisories": "dev-latest",
 		"sbuerk/typo3-cmscomposerinstallers-testingframework-bridge": "^0.1",
-		"typo3/testing-framework": "^7.0",
-		"phpunit/phpunit": "^9.6",
-		"typo3/coding-standards": "^0.6",
-		"friendsofphp/php-cs-fixer": "^3.14"
+		"typo3/coding-standards": "^0.8",
+		"typo3/testing-framework": "^9.0.1"
 	},
 	"replace": {
 		"typo3-ter/sync_crop_areas": "self.version"
@@ -50,17 +57,18 @@
 		}
 	},
 	"config": {
-		"vendor-dir": ".Build/vendor",
-		"bin-dir": ".Build/bin",
 		"allow-plugins": {
+			"ergebnis/composer-normalize": true,
 			"typo3/class-alias-loader": true,
 			"typo3/cms-composer-installers": true
-		}
+		},
+		"bin-dir": ".Build/bin",
+		"vendor-dir": ".Build/vendor"
 	},
 	"extra": {
 		"typo3/cms": {
-			"extension-key": "sync_crop_areas",
 			"app-dir": ".Build",
+			"extension-key": "sync_crop_areas",
 			"web-dir": ".Build/Web"
 		}
 	}

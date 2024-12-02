@@ -246,7 +246,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    public function invalidSysFileReferenceDataProvider(): array
+    public static function invalidSysFileReferenceDataProvider(): array
     {
         return [
             'Missing sync_crop_area column' => [['crop' => '{}', 'tablenames' => 'a', 'fieldname' => 'b', 'uid_foreign' => 1, 'pid' => 2]],

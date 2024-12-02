@@ -11,6 +11,7 @@ declare(strict_types=1);
 
 namespace JWeiland\SyncCropAreas\Tests\Functional\Hook;
 
+use Doctrine\DBAL\Exception;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
@@ -107,7 +108,7 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->subject->processDatamap_afterAllOperations($dataHandler);
     }
 
-    public function dataProviderForInvalidFileTables(): array
+    public static function dataProviderForInvalidFileTables(): array
     {
         return [
             'Do not process sys_file records' => ['sys_file'],
@@ -149,6 +150,7 @@ class DataHandlerHookTest extends FunctionalTestCase
 
     /**
      * @test
+     * @throws Exception
      */
     public function hookWillUpdateSysFileReferenceRecords(): void
     {
@@ -201,7 +203,7 @@ class DataHandlerHookTest extends FunctionalTestCase
 
         $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
         $statement = $connection->select(['*'], 'sys_file_reference');
-        while ($updatedRecord = $statement->fetch()) {
+        while ($updatedRecord = $statement->fetchAssociative()) {
             self::assertSame(
                 '{foo: "bar"}',
                 $updatedRecord['crop']
