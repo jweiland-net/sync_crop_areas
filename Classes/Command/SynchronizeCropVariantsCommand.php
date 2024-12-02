@@ -137,7 +137,7 @@ final class SynchronizeCropVariantsCommand extends Command
             ->where(
                 $queryBuilder->expr()->eq(
                     'sync_crop_area',
-                    $queryBuilder->createNamedParameter(1)
+                    1
                 )
             )
             ->executeQuery();
