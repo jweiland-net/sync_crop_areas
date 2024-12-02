@@ -123,11 +123,16 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->outputMock
             ->expects(self::exactly(3))
             ->method('writeln')
-            ->willReturnOnConsecutiveCalls(
-                'Start synchronizing crop variants of table sys_file_reference',
-                'SKIP: Column "crop" of sys_file_reference record with UID 1 is empty',
-                'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
-            );
+            ->willReturnCallback(function () {
+                static $calls = 0;
+                $responses = [
+                    'Start synchronizing crop variants of table sys_file_reference',
+                    'SKIP: Column "crop" of sys_file_reference record with UID 1 is empty',
+                    'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
+                ];
+
+                return $responses[$calls++];
+            });
 
         $this->subject->run(
             $this->inputMock,
@@ -159,11 +164,16 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->outputMock
             ->expects(self::exactly(3))
             ->method('writeln')
-            ->willReturnOnConsecutiveCalls(
-                'Start synchronizing crop variants of table sys_file_reference',
-                'SKIP: Column "pid" of sys_file_reference record with UID 1 is empty',
-                'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
-            );
+            ->willReturnCallback(function () {
+                static $calls = 0;
+                $responses = [
+                    'Start synchronizing crop variants of table sys_file_reference',
+                    'SKIP: Column "pid" of sys_file_reference record with UID 1 is empty',
+                    'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
+                ];
+
+                return $responses[$calls++];
+            });
 
         $this->subject->run(
             $this->inputMock,
@@ -197,11 +207,16 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->outputMock
             ->expects(self::exactly(3))
             ->method('writeln')
-            ->willReturnOnConsecutiveCalls(
-                'Start synchronizing crop variants of table sys_file_reference',
-                'SKIP: Column "crop" of table "sys_file_reference" with UID 1 because it is unchanged, empty or invalid JSON',
-                'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
-            );
+            ->willReturnCallback(function () {
+                static $calls = 0;
+                $responses = [
+                    'Start synchronizing crop variants of table sys_file_reference',
+                    'SKIP: Column "crop" of table "sys_file_reference" with UID 1 because it is unchanged, empty or invalid JSON',
+                    'We had 1 sys_file_reference records in total. 0 records were processed successfully and 1 records must be skipped because of invalid values',
+                ];
+
+                return $responses[$calls++];
+            });
 
         $this->updateCropVariantsServiceMock
             ->expects(self::atLeastOnce())
@@ -225,10 +240,15 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         $this->outputMock
             ->expects(self::exactly(2))
             ->method('writeln')
-            ->willReturnOnConsecutiveCalls(
-                'Start synchronizing crop variants of table sys_file_reference',
-                'We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values',
-            );
+            ->willReturnCallback(function () {
+                static $calls = 0;
+                $responses = [
+                    'Start synchronizing crop variants of table sys_file_reference',
+                    'We had 3 sys_file_reference records in total. 3 records were processed successfully and 0 records must be skipped because of invalid values',
+                ];
+
+                return $responses[$calls++];
+            });
 
         $this->updateCropVariantsServiceMock
             ->expects(self::atLeastOnce())
