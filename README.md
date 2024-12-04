@@ -54,4 +54,4 @@ Just save the content (tt_content) record to sync the cropAreas over all cropVar
 
 [TYPO3-shield]: https://img.shields.io/badge/TYPO3-13.4-green.svg?style=for-the-badge&logo=typo3
 
-[LICENSE_BADGE]: https://img.shields.io/github/license/jweiland-net/sync_crop_areas?label=license&style=for-the-badge
+[LICENSE_BADGE]: https://img.shields.io/badge/License-GPL_v2-blue.svg?style=for-the-badge
