@@ -9,8 +9,7 @@
 
 ![Build Status](https://github.com/jweiland-net/sync_crop_areas/actions/workflows/ci.yml/badge.svg)
 ## What does it do?
-
-e, if you want to copy the crop area of first crop variant over to all other crop
+If you want to copy the crop area of first crop variant over to all other crop
 variants. E.g. you have defined 4 crop variants "Desktop", "Landscape", "Tablet" and "Mobile". If you move
 the crop area of "Desktop", you have to do so with "Landscape", "Tablet" and "Mobile", too, which is a lot of work
 for your editors. Further it is hard to match the exact position (cropArea) in all other cropVariants.
@@ -33,7 +32,7 @@ Import the extension from TER (TYPO3 Extension Repository)
 
 ## Configuration
 
-There is no configuration for this extensions.
+There is no configuration for this extension.
 Just save the content (tt_content) record to sync the cropAreas over all cropVariants
 
 
