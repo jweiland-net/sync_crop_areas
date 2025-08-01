@@ -15,6 +15,8 @@ use Doctrine\DBAL\Exception;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Hook\DataHandlerHook;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
@@ -30,15 +32,9 @@ class DataHandlerHookTest extends FunctionalTestCase
 
     protected DataHandlerHook $subject;
 
-    /**
-     * @var UpdateCropVariantsService|MockObject
-     */
-    protected $updateCropVariantsServiceMock;
+    protected UpdateCropVariantsService|MockObject $updateCropVariantsServiceMock;
 
-    /**
-     * @var TcaHelper|MockObject
-     */
-    protected $tcaHelperMock;
+    protected TcaHelper|MockObject $tcaHelperMock;
 
     protected function setUp(): void
     {
@@ -64,9 +60,7 @@ class DataHandlerHookTest extends FunctionalTestCase
         parent::tearDown();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function hookWithEmptyDatamapWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
@@ -83,9 +77,7 @@ class DataHandlerHookTest extends FunctionalTestCase
         $this->subject->processDatamap_afterAllOperations($dataHandler);
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function hookWithoutSysFileReferenceWillNotProcessAnything(): void
     {
         $this->tcaHelperMock
@@ -121,11 +113,8 @@ class DataHandlerHookTest extends FunctionalTestCase
         ];
     }
 
-    /**
-     * @test
-     *
-     * @dataProvider dataProviderForInvalidFileTables
-     */
+    #[Test]
+    #[DataProvider('dataProviderForInvalidFileTables')]
     public function hookWithOnlyFileTablesWillNotProcessAnything(string $invalidTable): void
     {
         $this->tcaHelperMock
@@ -149,9 +138,9 @@ class DataHandlerHookTest extends FunctionalTestCase
     }
 
     /**
-     * @test
-     * @throws Exception
+     * @throws Exception|\PHPUnit\Framework\MockObject\Exception
      */
+    #[Test]
     public function hookWillUpdateSysFileReferenceRecords(): void
     {
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
