@@ -13,6 +13,7 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Command;
 
 use JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
@@ -31,20 +32,11 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
 
     protected SynchronizeCropVariantsCommand $subject;
 
-    /**
-     * @var UpdateCropVariantsService|MockObject
-     */
-    protected $updateCropVariantsServiceMock;
+    protected UpdateCropVariantsService|MockObject $updateCropVariantsServiceMock;
 
-    /**
-     * @var InputInterface|MockObject
-     */
-    protected $inputMock;
+    protected InputInterface|MockObject $inputMock;
 
-    /**
-     * @var OutputInterface|MockObject
-     */
-    protected $outputMock;
+    protected OutputInterface|MockObject $outputMock;
 
     protected function setUp(): void
     {
@@ -72,9 +64,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         parent::tearDown();
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function runWithNoSysFileReferencesDisplaysEmptyStatistic(): void
     {
         $this->outputMock
@@ -99,9 +89,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function runWithEmptyCropColumnWillSkipRecord(): void
     {
         $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
@@ -140,9 +128,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function runWithEmptyPidColumnWillSkipRecord(): void
     {
         $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
@@ -181,9 +167,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function runWithUnchangedCropWillSkipRecord(): void
     {
         $sysFileReferenceRecord = [
@@ -229,9 +213,7 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function runWithChangedCropWillUpdateRecord(): void
     {
         $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');

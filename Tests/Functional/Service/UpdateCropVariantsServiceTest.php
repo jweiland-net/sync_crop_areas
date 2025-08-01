@@ -14,6 +14,8 @@ namespace JWeiland\SyncCropAreas\Tests\Functional\Service;
 use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use JWeiland\SyncCropAreas\Tests\Functional\Traits\FrontendSiteTrait;
+use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\Test;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -229,9 +231,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         ';
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWithDeactivatedFeatureWillNotChangeRecord(): void
     {
         $sysFileReference = [
@@ -269,11 +269,8 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         ];
     }
 
-    /**
-     * @test
-     *
-     * @dataProvider invalidSysFileReferenceDataProvider
-     */
+    #[Test]
+    #[DataProvider('invalidSysFileReferenceDataProvider')]
     public function synchronizeCropVariantsWithInvalidRecordWillNotChangeRecord(array $sysFileReference): void
     {
         self::assertSame(
@@ -282,9 +279,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWithOneCropVariantWillNotChangeFieldArray(): void
     {
         $this->activateTcaCropVariantsForSysFileReference();
@@ -307,9 +302,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWithNonMatchingSelectedRatiosWillNotChangeFieldArray(): void
     {
         $this->activateTcaCropVariantsForSysFileReference();
@@ -329,9 +322,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @tester
-     */
+    #[Test]
     public function synchronizeCropVariantsWillChangeFieldArrayForTcaDefinedCropVariants(): void
     {
         $crop = $this->crop;
@@ -359,9 +350,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWillChangeFieldArrayForPageTsConfigDefinedCropVariants(): void
     {
         $this->disableTcaCropVariants();
@@ -393,9 +382,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWillChangeFieldArrayForMergedCropVariants(): void
     {
         $this->activateTcaCropVariantsForSysFileReference();
@@ -425,9 +412,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         );
     }
 
-    /**
-     * @test
-     */
+    #[Test]
     public function synchronizeCropVariantsWithoutCtrlRecordTypesWillChangeFieldArray(): void
     {
         $this->activateTcaCropVariantsForTtContentWithoutTypes();
