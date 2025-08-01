@@ -11,6 +11,7 @@ Version 4.0.1
 =============
 
 *   TASK: Update testing directory
+*   TASK: Replaced deprecations in test cases
 
 Version 4.0.0
 =============
