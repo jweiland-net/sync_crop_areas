@@ -96,9 +96,10 @@ class UpdateCropVariantsService
             $sysFileReference['fieldname'],
             $sysFileReference['pid'],
             $this->tcaHelper->getTypeOfRecord(
-                $this->getForeignRecord($sysFileReference['tablenames'], (int)$sysFileReference['uid_foreign']),
+                $this->getForeignRecord($sysFileReference['tablenames'], (int) $sysFileReference['uid_foreign']),
                 $sysFileReference['tablenames']
-            )
+            ),
+            (int) $sysFileReference['uid_foreign']
         );
 
         try {
@@ -119,8 +120,8 @@ class UpdateCropVariantsService
         $updatedCropVariants = [];
         foreach ($persistedCropVariants as $name => $persistedCropVariantConfiguration) {
             if (
-                $persistedCropVariantConfiguration !== $firstPersistedCropVariantConfiguration
-                && $this->isSelectedRatioAvailableInCurrentCropVariantConfiguration(
+                $persistedCropVariantConfiguration !== $firstPersistedCropVariantConfiguration &&
+                $this->isSelectedRatioAvailableInCurrentCropVariantConfiguration(
                     $persistedCropVariantConfiguration,
                     $firstPersistedCropVariantConfiguration
                 )
@@ -137,7 +138,7 @@ class UpdateCropVariantsService
             $updatedCropVariants
         );
 
-        $sysFileReference['crop'] = (string)$updatedCropVariantCollection;
+        $sysFileReference['crop'] = (string) $updatedCropVariantCollection;
 
         return $sysFileReference;
     }
@@ -167,7 +168,7 @@ class UpdateCropVariantsService
         foreach ($config['cropVariants'] as $id => $cropVariant) {
             // Filter allowed aspect ratios
             $cropVariant['allowedAspectRatios'] = array_filter($cropVariant['allowedAspectRatios'] ?? [], static function ($aspectRatio) {
-                return !(bool)($aspectRatio['disabled'] ?? false);
+                return !(bool) ($aspectRatio['disabled'] ?? false);
             });
 
             // Ignore disabled crop variants
@@ -201,7 +202,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ((int)$sysFileReference['sync_crop_area'] === 0) {
+        if (0 === (int) $sysFileReference['sync_crop_area']) {
             return false;
         }
 
@@ -209,7 +210,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ($sysFileReference['crop'] === '') {
+        if ('' === $sysFileReference['crop']) {
             return false;
         }
 
@@ -217,7 +218,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ($sysFileReference['tablenames'] === '') {
+        if ('' === $sysFileReference['tablenames']) {
             return false;
         }
 
@@ -225,7 +226,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ($sysFileReference['fieldname'] === '') {
+        if ('' === $sysFileReference['fieldname']) {
             return false;
         }
 
@@ -233,7 +234,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ((int)$sysFileReference['uid_foreign'] === 0) {
+        if (0 === (int) $sysFileReference['uid_foreign']) {
             return false;
         }
 
@@ -241,7 +242,7 @@ class UpdateCropVariantsService
             return false;
         }
 
-        if ((int)$sysFileReference['pid'] === 0) {
+        if (0 === (int) $sysFileReference['pid']) {
             return false;
         }
 
