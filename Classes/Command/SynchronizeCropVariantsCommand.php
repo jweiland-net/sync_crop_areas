@@ -32,7 +32,7 @@ final class SynchronizeCropVariantsCommand extends Command
 
     public function __construct(
         protected UpdateCropVariantsService $updateCropVariantsService,
-        string $name = null
+        ?string $name = null
     ) {
         parent::__construct($name);
     }
