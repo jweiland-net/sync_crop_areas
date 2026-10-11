@@ -12,13 +12,17 @@ declare(strict_types=1);
 namespace JWeiland\SyncCropAreas\Tests\Functional\Command;
 
 use JWeiland\SyncCropAreas\Command\SynchronizeCropVariantsCommand;
+use JWeiland\SyncCropAreas\Helper\TcaHelper;
 use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use Symfony\Component\Console\Input\ArrayInput;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\StringInput;
+use Symfony\Component\Console\Output\BufferedOutput;
 use Symfony\Component\Console\Output\ConsoleOutput;
 use Symfony\Component\Console\Output\OutputInterface;
+use TYPO3\CMS\Core\Console\CommandRegistry;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -250,5 +254,92 @@ class SynchronizeCropVariantsCommandTest extends FunctionalTestCase
                 $updatedRecord['crop']
             );
         }
+    }
+
+    #[Test]
+    public function commandIsRegisteredInCommandRegistry(): void
+    {
+        $commandRegistry = $this->get(CommandRegistry::class);
+
+        self::assertTrue($commandRegistry->has('sync_crop_areas:sync'));
+        self::assertInstanceOf(
+            SynchronizeCropVariantsCommand::class,
+            $commandRegistry->get('sync_crop_areas:sync')
+        );
+    }
+
+    /**
+     * Integration test without mocks: one record has to be synchronized, one is already in sync
+     */
+    #[Test]
+    public function runWithRealServiceWillSynchronizeChangedRecordsOnly(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/pages.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+
+        $freeRatio = [
+            'NaN' => [
+                'title' => 'Free',
+                'value' => 0.0,
+            ],
+        ];
+        $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants'] = [
+            'desktop' => [
+                'title' => 'Desktop',
+                'allowedAspectRatios' => $freeRatio,
+            ],
+            'mobile' => [
+                'title' => 'Mobile',
+                'allowedAspectRatios' => $freeRatio,
+            ],
+        ];
+
+        $desktopCropArea = ['x' => 0.1, 'y' => 0.2, 'width' => 0.5, 'height' => 0.4];
+        $unsynchronizedCrop = json_encode([
+            'desktop' => ['cropArea' => $desktopCropArea, 'selectedRatio' => 'NaN', 'focusArea' => null],
+            'mobile' => ['cropArea' => ['x' => 0, 'y' => 0, 'width' => 1, 'height' => 1], 'selectedRatio' => 'NaN', 'focusArea' => null],
+        ], JSON_THROW_ON_ERROR);
+        $synchronizedCrop = json_encode([
+            'desktop' => ['cropArea' => $desktopCropArea, 'selectedRatio' => 'NaN', 'focusArea' => null],
+            'mobile' => ['cropArea' => $desktopCropArea, 'selectedRatio' => 'NaN', 'focusArea' => null],
+        ], JSON_THROW_ON_ERROR);
+
+        $connection = $this->getConnectionPool()->getConnectionForTable('sys_file_reference');
+        foreach ([1 => $unsynchronizedCrop, 2 => $synchronizedCrop] as $uid => $crop) {
+            $connection->insert(
+                'sys_file_reference',
+                [
+                    'uid' => $uid,
+                    'pid' => 1,
+                    'crop' => $crop,
+                    'sync_crop_area' => 1,
+                    'tablenames' => 'tt_content',
+                    'fieldname' => 'image',
+                    'uid_local' => $uid,
+                    'uid_foreign' => $uid,
+                ]
+            );
+        }
+
+        $output = new BufferedOutput();
+        $command = new SynchronizeCropVariantsCommand(new UpdateCropVariantsService(new TcaHelper()));
+        $command->run(new ArrayInput([]), $output);
+
+        self::assertStringContainsString(
+            'We had 2 sys_file_reference records in total. 1 records were processed successfully and 1 records must be skipped',
+            $output->fetch()
+        );
+
+        $records = [];
+        $statement = $connection->select(['uid', 'crop'], 'sys_file_reference');
+        while ($record = $statement->fetchAssociative()) {
+            $records[(int)$record['uid']] = $record['crop'];
+        }
+
+        $updatedCrop = json_decode((string)$records[1], true, 512, JSON_THROW_ON_ERROR);
+        self::assertEquals($desktopCropArea, $updatedCrop['mobile']['cropArea']);
+
+        // Already synchronized record is untouched (not re-serialized)
+        self::assertSame($synchronizedCrop, $records[2]);
     }
 }

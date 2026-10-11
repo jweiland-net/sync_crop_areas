@@ -171,9 +171,41 @@ class UpdateCropVariantsServiceTest extends FunctionalTestCase
         unset($GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']);
     }
 
-    protected function activatePageTsConfigCropVariants(): void
+    /**
+     * $GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPageTSconfig'] is ignored since TYPO3 14.
+     * Store the TSconfig in the root page record instead, which works for TYPO3 13 and 14.
+     */
+    protected function setPageTsConfig(string $pageTsConfig): void
     {
-        $GLOBALS['TYPO3_CONF_VARS']['BE']['defaultPageTSconfig'] = '
+        $this->getConnectionPool()
+            ->getConnectionForTable('pages')
+            ->update('pages', ['TSconfig' => $pageTsConfig], ['uid' => 1]);
+    }
+
+    /**
+     * Since TYPO3 14 each serialized CropVariant contains the key "excludeFromSync".
+     * Compare the crop JSON semantically without this key to stay independent of the TYPO3 version.
+     */
+    protected static function assertSysFileReferenceEquals(array $expected, array $actual): void
+    {
+        $normalize = static function (array $sysFileReference): array {
+            if (is_string($sysFileReference['crop'] ?? null)) {
+                $crop = json_decode($sysFileReference['crop'], true, 512, JSON_THROW_ON_ERROR);
+                foreach ($crop as &$cropVariant) {
+                    unset($cropVariant['excludeFromSync']);
+                }
+                unset($cropVariant);
+                $sysFileReference['crop'] = $crop;
+            }
+            return $sysFileReference;
+        };
+
+        self::assertSame($normalize($expected), $normalize($actual));
+    }
+
+    protected function activatePageTsConfigCropVariants(string $additionalPageTsConfig = ''): void
+    {
+        $this->setPageTsConfig('
 TCEFORM.sys_file_reference.crop.config.cropVariants.desktop {
   title = default
   selectedRatio = NaN
@@ -228,7 +260,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
     }
   }
 }
-        ';
+' . $additionalPageTsConfig);
     }
 
     #[Test]
@@ -344,7 +376,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         $expectedSysFileReference = $sysFileReference;
         $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 
-        self::assertSame(
+        self::assertSysFileReferenceEquals(
             $expectedSysFileReference,
             $this->subject->synchronizeCropVariants($sysFileReference)
         );
@@ -376,7 +408,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         $expectedSysFileReference = $sysFileReference;
         $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 
-        self::assertSame(
+        self::assertSysFileReferenceEquals(
             $expectedSysFileReference,
             $this->subject->synchronizeCropVariants($sysFileReference)
         );
@@ -406,7 +438,7 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         $expectedSysFileReference = $sysFileReference;
         $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 
-        self::assertSame(
+        self::assertSysFileReferenceEquals(
             $expectedSysFileReference,
             $this->subject->synchronizeCropVariants($sysFileReference)
         );
@@ -434,7 +466,170 @@ TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone {
         $expectedSysFileReference = $sysFileReference;
         $expectedSysFileReference['crop'] = json_encode($crop, JSON_THROW_ON_ERROR);
 
+        self::assertSysFileReferenceEquals(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    #[Test]
+    public function synchronizeCropVariantsWithAlreadySynchronizedCropWillNotChangeRecord(): void
+    {
+        $crop = $this->crop;
+        $crop['desktop']['selectedRatio'] = 'NaN';
+        $crop['mobile'] = $crop['desktop'];
+
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
+        ];
+
+        // Nothing to synchronize: the stored crop JSON must not be re-serialized (TYPO3 14 would add new keys)
         self::assertSame(
+            $sysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    #[Test]
+    public function synchronizeCropVariantsWillNotChangeCropVariantExcludedFromSync(): void
+    {
+        $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']['listview'] = [
+            'title' => 'List view',
+            'excludeFromSync' => true,
+            'allowedAspectRatios' => [
+                'NaN' => [
+                    'title' => 'Free',
+                    'value' => 0.0,
+                ],
+            ],
+        ];
+
+        $crop = $this->crop;
+        $crop['desktop']['selectedRatio'] = 'NaN';
+        $crop['listview'] = $this->crop['mobile'];
+        $crop['listview']['selectedRatio'] = 'NaN';
+
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
+        ];
+
+        // "mobile" gets synchronized, "listview" keeps its own crop area
+        $expectedCrop = $crop;
+        $expectedCrop['mobile']['selectedRatio'] = 'NaN';
+        $expectedCrop['mobile']['cropArea'] = $crop['desktop']['cropArea'];
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($expectedCrop, JSON_THROW_ON_ERROR);
+
+        self::assertSysFileReferenceEquals(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    #[Test]
+    public function synchronizeCropVariantsWillUseFirstCropVariantNotExcludedFromSyncAsSource(): void
+    {
+        $freeRatio = [
+            'NaN' => [
+                'title' => 'Free',
+                'value' => 0.0,
+            ],
+        ];
+        $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants'] = [
+            'listview' => [
+                'title' => 'List view',
+                'excludeFromSync' => true,
+                'allowedAspectRatios' => $freeRatio,
+            ],
+            'desktop' => [
+                'title' => 'Desktop',
+                'allowedAspectRatios' => $freeRatio,
+            ],
+            'mobile' => [
+                'title' => 'Mobile',
+                'allowedAspectRatios' => $freeRatio,
+            ],
+        ];
+
+        $crop = [
+            'listview' => [
+                'cropArea' => ['x' => 0.5, 'y' => 0.5, 'width' => 0.25, 'height' => 0.25],
+                'selectedRatio' => 'NaN',
+                'focusArea' => null,
+            ],
+            'desktop' => [
+                'cropArea' => ['x' => 0.1, 'y' => 0.2, 'width' => 0.6, 'height' => 0.5],
+                'selectedRatio' => 'NaN',
+                'focusArea' => null,
+            ],
+            'mobile' => [
+                'cropArea' => ['x' => 0, 'y' => 0, 'width' => 1, 'height' => 1],
+                'selectedRatio' => 'NaN',
+                'focusArea' => null,
+            ],
+        ];
+
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
+        ];
+
+        // "desktop" is the source, as "listview" is excluded from synchronization
+        $expectedCrop = $crop;
+        $expectedCrop['mobile']['cropArea'] = $crop['desktop']['cropArea'];
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($expectedCrop, JSON_THROW_ON_ERROR);
+
+        self::assertSysFileReferenceEquals(
+            $expectedSysFileReference,
+            $this->subject->synchronizeCropVariants($sysFileReference)
+        );
+    }
+
+    #[Test]
+    public function synchronizeCropVariantsWillRespectExcludeFromSyncOfPageTsConfig(): void
+    {
+        $this->disableTcaCropVariants();
+        $this->activatePageTsConfigCropVariants(
+            'TCEFORM.sys_file_reference.crop.config.cropVariants.smartphone.excludeFromSync = 1'
+        );
+
+        $crop = $this->crop;
+        $crop['tablet'] = $crop['mobile'];
+        $crop['smartphone'] = $crop['mobile'];
+        $crop['desktop']['selectedRatio'] = '16:9';
+        unset($crop['mobile']);
+
+        $sysFileReference = [
+            'sync_crop_area' => 1,
+            'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+            'tablenames' => 'tt_content',
+            'fieldname' => 'image',
+            'uid_foreign' => 1,
+            'pid' => 1,
+        ];
+
+        // "tablet" gets synchronized, "smartphone" is excluded via TSconfig (string value "1")
+        $expectedCrop = $crop;
+        $expectedCrop['tablet'] = $crop['desktop'];
+        $expectedSysFileReference = $sysFileReference;
+        $expectedSysFileReference['crop'] = json_encode($expectedCrop, JSON_THROW_ON_ERROR);
+
+        self::assertSysFileReferenceEquals(
             $expectedSysFileReference,
             $this->subject->synchronizeCropVariants($sysFileReference)
         );

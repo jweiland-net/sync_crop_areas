@@ -1,0 +1,5 @@
+"sys_file"
+,"uid","pid","storage","type","identifier","identifier_hash","folder_hash","extension","mime_type","name","sha1","size"
+,1,0,1,2,"/user_upload/image1.jpg","6f1e0b8a40e0f2b8a8c1d1a3d7a5f62e1f4b7a01","19898e1ea5f0f7e5e3bd7f1d1d0a9aa2b47f3d1e","jpg","image/jpeg","image1.jpg","da39a3ee5e6b4b0d3255bfef95601890afd80709",1024
+,2,0,1,2,"/user_upload/image2.jpg","6f1e0b8a40e0f2b8a8c1d1a3d7a5f62e1f4b7a02","19898e1ea5f0f7e5e3bd7f1d1d0a9aa2b47f3d1e","jpg","image/jpeg","image2.jpg","da39a3ee5e6b4b0d3255bfef95601890afd80709",1024
+,3,0,1,2,"/user_upload/image3.jpg","6f1e0b8a40e0f2b8a8c1d1a3d7a5f62e1f4b7a03","19898e1ea5f0f7e5e3bd7f1d1d0a9aa2b47f3d1e","jpg","image/jpeg","image3.jpg","da39a3ee5e6b4b0d3255bfef95601890afd80709",1024

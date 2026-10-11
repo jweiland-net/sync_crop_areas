@@ -50,6 +50,42 @@ build up the CropVariants with PageTSConfig.
     In example above `4:3` exists in both CropVariants so syncing these
     CropVariants will not be a problem.
 
+..  _configuration-exclude-from-sync:
+
+Exclude CropVariants from synchronization
+=========================================
+
+TYPO3 14.2 introduced the CropVariant option `excludeFromSync` for its own
+synchronized cropping in the image manipulation wizard. EXT:sync_crop_areas
+respects this option, too (also with TYPO3 13.4): an excluded CropVariant
+is neither used as source nor will it be overwritten. The source is the
+first CropVariant which is not excluded.
+
+..  code-block:: php
+
+    $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants']['listview'] = [
+        'title' => 'List view',
+        'excludeFromSync' => true,
+        'allowedAspectRatios' => [
+            '1:1' => [
+                'title' => '1/1',
+                'value' => 1.0
+            ],
+        ],
+    ];
+
+..  code-block:: typoscript
+
+    TCEFORM.sys_file_reference.crop.config.cropVariants.listview.excludeFromSync = 1
+
+..  note::
+
+    The synchronized cropping of the TYPO3 14.2+ core is only offered to
+    editors, if all CropVariants share an identical configuration (except the
+    title). EXT:sync_crop_areas also synchronizes CropVariants with different
+    aspect ratios, as long as the selected ratio of the source CropVariant is
+    allowed in the target CropVariant. Both features can be used together.
+
 Usually a TCA reference to `sys_file_reference` in your extension should
 look like:
 

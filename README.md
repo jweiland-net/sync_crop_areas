@@ -5,6 +5,7 @@
 [![Total Downloads][extension-downloads-badge]][extension-packagist-url]
 [![Monthly Downloads][extension-monthly-downloads]][extension-packagist-url]
 [![TYPO3 13.4][TYPO3-shield]][TYPO3-13-url]
+[![TYPO3 14.3][TYPO3-14-shield]][TYPO3-14-url]
 
 ![Build Status](https://github.com/jweiland-net/sync_crop_areas/actions/workflows/ci.yml/badge.svg)
 ## What does it do?
@@ -57,3 +58,7 @@ For commercial support, please contact us at [support@jweiland.net](support@jwei
 [TYPO3-13-url]: https://get.typo3.org/version/13
 
 [TYPO3-shield]: https://img.shields.io/badge/TYPO3-13.4-green.svg?style=for-the-badge&logo=typo3
+
+[TYPO3-14-url]: https://get.typo3.org/version/14
+
+[TYPO3-14-shield]: https://img.shields.io/badge/TYPO3-14.3-green.svg?style=for-the-badge&logo=typo3

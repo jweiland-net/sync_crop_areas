@@ -18,7 +18,10 @@ use JWeiland\SyncCropAreas\Service\UpdateCropVariantsService;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\MockObject\MockObject;
+use TYPO3\CMS\Backend\Utility\BackendUtility;
 use TYPO3\CMS\Core\DataHandling\DataHandler;
+use TYPO3\CMS\Core\Localization\LanguageServiceFactory;
+use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\TestingFramework\Core\Functional\FunctionalTestCase;
 
 /**
@@ -198,5 +201,85 @@ class DataHandlerHookTest extends FunctionalTestCase
                 $updatedRecord['crop']
             );
         }
+    }
+
+    /**
+     * Integration test without mocks: real DataHandler, hook registered via ext_localconf.php
+     */
+    #[Test]
+    public function processDatamapOfDataHandlerWillSynchronizeCropVariants(): void
+    {
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/be_users.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_storage.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/pages.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/tt_content.csv');
+        $this->importCSVDataSet(__DIR__ . '/../Fixtures/sys_file_reference.csv');
+
+        $backendUser = $this->setUpBackendUser(1);
+        $GLOBALS['LANG'] = $this->get(LanguageServiceFactory::class)->createFromUserPreferences($backendUser);
+
+        $allowedAspectRatios = [
+            'NaN' => [
+                'title' => 'Free',
+                'value' => 0.0,
+            ],
+            '16:9' => [
+                'title' => '16:9',
+                'value' => 16 / 9,
+            ],
+        ];
+        $GLOBALS['TCA']['sys_file_reference']['columns']['crop']['config']['cropVariants'] = [
+            'desktop' => [
+                'title' => 'Desktop',
+                'allowedAspectRatios' => $allowedAspectRatios,
+            ],
+            'mobile' => [
+                'title' => 'Mobile',
+                'allowedAspectRatios' => $allowedAspectRatios,
+            ],
+        ];
+
+        $desktopCropArea = ['x' => 0.1, 'y' => 0.2, 'width' => 0.5, 'height' => 0.4];
+        $crop = [
+            'desktop' => [
+                'cropArea' => $desktopCropArea,
+                'selectedRatio' => '16:9',
+                'focusArea' => null,
+            ],
+            'mobile' => [
+                'cropArea' => ['x' => 0, 'y' => 0, 'width' => 1, 'height' => 1],
+                'selectedRatio' => 'NaN',
+                'focusArea' => null,
+            ],
+        ];
+
+        $dataHandler = GeneralUtility::makeInstance(DataHandler::class);
+        $dataHandler->start(
+            [
+                'sys_file_reference' => [
+                    1 => [
+                        'crop' => json_encode($crop, JSON_THROW_ON_ERROR),
+                    ],
+                ],
+                'tt_content' => [
+                    1 => [
+                        'image' => '1',
+                    ],
+                ],
+            ],
+            []
+        );
+        $dataHandler->process_datamap();
+
+        self::assertSame([], $dataHandler->errorLog);
+
+        $sysFileReferenceRecord = BackendUtility::getRecord('sys_file_reference', 1);
+        self::assertIsArray($sysFileReferenceRecord);
+
+        $persistedCrop = json_decode((string)$sysFileReferenceRecord['crop'], true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame('16:9', $persistedCrop['mobile']['selectedRatio']);
+        self::assertEquals($desktopCropArea, $persistedCrop['mobile']['cropArea']);
+        self::assertEquals($desktopCropArea, $persistedCrop['desktop']['cropArea']);
     }
 }

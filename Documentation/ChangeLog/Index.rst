@@ -7,6 +7,21 @@
 ChangeLog
 =========
 
+Version 4.1.0
+=============
+
+*   TASK: Add TYPO3 14 compatibility (TYPO3 13.4 is still supported)
+*   TASK: Add extension metadata (`version`, `providesPackages`) to composer.json
+    to avoid the `ext_emconf.php` deprecation of TYPO3 14.2
+*   TASK: Add missing dependency to `typo3/cms-backend`
+*   FEATURE: Respect CropVariant option `excludeFromSync` (introduced with
+    TYPO3 14.2, also evaluated with TYPO3 13.4)
+*   BUGFIX: Do not rewrite column `crop` if nothing was synchronized. Since
+    TYPO3 14 the serialized crop contains additional keys, which led to
+    needless updates and wrong statistics of the CLI command
+*   BUGFIX: Use explicit nullable parameter in command (PHP 8.4 deprecation)
+*   TASK: Run functional tests against TYPO3 13.4 and 14.3 with PHP 8.2 - 8.4
+
 Version 4.0.1
 =============
 

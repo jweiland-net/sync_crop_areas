@@ -1,6 +1,6 @@
 {
 	"name": "jweiland/sync-crop-areas",
-	"description": "Sync first found crop area to all other CropVariants",
+	"description": "Sync Crop Areas - Sync first found crop area to all other CropVariants",
 	"license": "GPL-2.0-or-later",
 	"type": "typo3-cms-extension",
 	"keywords": [
@@ -32,7 +32,8 @@
 	"require": {
 		"php": "^8.2",
 		"ext-json": "*",
-		"typo3/cms-core": "^13.4.0"
+		"typo3/cms-backend": "^13.4.0 || ^14.3.0",
+		"typo3/cms-core": "^13.4.0 || ^14.3.0"
 	},
 	"require-dev": {
 		"ergebnis/composer-normalize": "^2.44",
@@ -67,8 +68,12 @@
 	},
 	"extra": {
 		"typo3/cms": {
+			"Package": {
+				"providesPackages": {}
+			},
 			"app-dir": ".Build",
 			"extension-key": "sync_crop_areas",
+			"version": "4.1.0",
 			"web-dir": ".Build/public"
 		}
 	}
