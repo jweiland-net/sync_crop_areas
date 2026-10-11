@@ -64,7 +64,7 @@ class TcaHelper
         string $column,
         string $type,
         int $pageUid,
-        &$columnBaseConfiguration
+        array &$columnBaseConfiguration
     ): void {
         $pageTsConfig = BackendUtility::getPagesTSconfig($pageUid);
 

@@ -92,20 +92,22 @@ class UpdateCropVariantsService
 
         // Get TCA and PageTSConfig merged CropVariants
         $mergedCropVariants = $this->tcaHelper->getMergedCropVariants(
-            $sysFileReference['tablenames'],
-            $sysFileReference['fieldname'],
-            $sysFileReference['pid'],
+            (string)$sysFileReference['tablenames'],
+            (string)$sysFileReference['fieldname'],
+            (int)$sysFileReference['pid'],
             $this->tcaHelper->getTypeOfRecord(
-                $this->getForeignRecord($sysFileReference['tablenames'], (int)$sysFileReference['uid_foreign']),
-                $sysFileReference['tablenames']
+                $this->getForeignRecord((string)$sysFileReference['tablenames'], (int)$sysFileReference['uid_foreign']),
+                (string)$sysFileReference['tablenames']
             )
         );
 
         try {
-            $persistedCropVariants = CropVariantCollection::create(
-                $sysFileReference['crop'],
-                $this->populateConfiguration(['cropVariants' => $mergedCropVariants])['cropVariants']
-            )->asArray();
+            $cropVariantsConfiguration = $this->populateConfiguration(['cropVariants' => $mergedCropVariants])['cropVariants'];
+            $persistedCropVariantCollection = CropVariantCollection::create(
+                (string)$sysFileReference['crop'],
+                $cropVariantsConfiguration
+            );
+            $persistedCropVariants = $persistedCropVariantCollection->asArray();
 
             if (count($persistedCropVariants) <= 1) {
                 return $sysFileReference;
@@ -114,12 +116,22 @@ class UpdateCropVariantsService
             return $sysFileReference;
         }
 
-        $firstPersistedCropVariantConfiguration = current($persistedCropVariants);
+        // Source is the first CropVariant which is not excluded from synchronization
+        $sourceCropVariantName = $this->getNameOfFirstSynchronizableCropVariant(
+            $persistedCropVariants,
+            $cropVariantsConfiguration
+        );
+        if ($sourceCropVariantName === null) {
+            return $sysFileReference;
+        }
+
+        $firstPersistedCropVariantConfiguration = $persistedCropVariants[$sourceCropVariantName];
 
         $updatedCropVariants = [];
         foreach ($persistedCropVariants as $name => $persistedCropVariantConfiguration) {
             if (
-                $persistedCropVariantConfiguration !== $firstPersistedCropVariantConfiguration
+                (string)$name !== $sourceCropVariantName
+                && !$this->isCropVariantExcludedFromSync($cropVariantsConfiguration[$name] ?? [])
                 && $this->isSelectedRatioAvailableInCurrentCropVariantConfiguration(
                     $persistedCropVariantConfiguration,
                     $firstPersistedCropVariantConfiguration
@@ -129,17 +141,48 @@ class UpdateCropVariantsService
                 $persistedCropVariantConfiguration['cropArea'] = $firstPersistedCropVariantConfiguration['cropArea'];
             }
 
-            $updatedCropVariants[] = CropVariant::createFromConfiguration($name, $persistedCropVariantConfiguration);
+            $updatedCropVariants[] = CropVariant::createFromConfiguration((string)$name, $persistedCropVariantConfiguration);
         }
 
-        $updatedCropVariantCollection = GeneralUtility::makeInstance(
+        $updatedCrop = (string)GeneralUtility::makeInstance(
             CropVariantCollection::class,
             $updatedCropVariants
         );
 
-        $sysFileReference['crop'] = (string)$updatedCropVariantCollection;
+        // Nothing was synchronized: return the record untouched. Since TYPO3 14 the serialized crop JSON
+        // contains additional keys (e.g. "excludeFromSync"), so a re-serialized crop would differ from
+        // the stored one although no crop area has changed.
+        if ($updatedCrop === (string)$persistedCropVariantCollection) {
+            return $sysFileReference;
+        }
+
+        $sysFileReference['crop'] = $updatedCrop;
 
         return $sysFileReference;
+    }
+
+    /**
+     * Returns the name of the first CropVariant which is not excluded from synchronization.
+     * Option "excludeFromSync" was introduced with TYPO3 14.2 (core feature #105742). It is read
+     * from the merged TCA/TSconfig configuration, so it also works with TYPO3 13.4.
+     */
+    protected function getNameOfFirstSynchronizableCropVariant(
+        array $persistedCropVariants,
+        array $cropVariantsConfiguration
+    ): ?string {
+        foreach (array_keys($persistedCropVariants) as $name) {
+            if (!$this->isCropVariantExcludedFromSync($cropVariantsConfiguration[$name] ?? [])) {
+                return (string)$name;
+            }
+        }
+
+        return null;
+    }
+
+    protected function isCropVariantExcludedFromSync(array $cropVariantConfiguration): bool
+    {
+        // TSconfig delivers strings like "1", TCA delivers booleans
+        return filter_var($cropVariantConfiguration['excludeFromSync'] ?? false, FILTER_VALIDATE_BOOLEAN);
     }
 
     /**
