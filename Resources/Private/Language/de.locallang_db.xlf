@@ -1,16 +1,16 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <xliff version="1.0">
-	<file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2020-04-30T15:11:04Z" product-name="sync_crop_areas">
-		<header/>
-		<body>
-			<trans-unit id="sys_file_reference.sync_crop_area">
-				<source>Synchronize cropArea</source>
-				<target>Synchronisiere cropArea</target>
-			</trans-unit>
-			<trans-unit id="sys_file_reference.sync_crop_area.description">
-				<source>Use cropArea of first cropVariant and copy it over to the other cropVariants</source>
-				<target>Verwende die cropArea der ersten cropVariant und kopiere diese in alle anderen cropVariants</target>
-			</trans-unit>
-		</body>
-	</file>
+  <file source-language="en" target-language="de" datatype="plaintext" original="messages" date="2020-04-30T15:11:04Z" product-name="sync_crop_areas">
+    <header/>
+    <body>
+      <trans-unit id="sys_file_reference.sync_crop_area" approved="yes">
+        <source>Synchronize cropArea</source>
+        <target state="final">Synchronisiere cropArea</target>
+      </trans-unit>
+      <trans-unit id="sys_file_reference.sync_crop_area.description" approved="yes">
+        <source>Use cropArea of first cropVariant and copy it over to the other cropVariants</source>
+        <target state="final">Verwende die cropArea der ersten cropVariant und kopiere diese in alle anderen cropVariants</target>
+      </trans-unit>
+    </body>
+  </file>
 </xliff>
